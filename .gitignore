@@ -1,0 +1,20 @@
+# Root
+node_modules/
+__pycache__/
+uv.lock
+.env
+
+# Backend
+apps/backend/.venv/
+
+apps/backend/.env
+apps/backend/keys
+apps/backend/debug
+apps/backend/README.txt
+
+# Mobile
+apps/mobile/node_modules/
+apps/mobile/.expo/
+apps/mobile/expo-env.d.ts
+
+apps/mobile/.env
