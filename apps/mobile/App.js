@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  View,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Alert,
@@ -80,7 +78,6 @@ export default function App() {
 
   const syncRecipes = useCallback(async () => {
     try {
-      console.log("API ", API_URL)
       const response = await axios.post(`${API_URL}/ingestion/sync-recipes`);
       const summary = response.data.summary;
       setSyncResult(summary);
@@ -111,17 +108,17 @@ export default function App() {
     }
   }, []);
 
-  if (!fontsLoaded || showSplash) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f4f4f4" }}>
-        <Image 
-          source={require("./assets/splash.jpg")} 
-          style={{ width: 320, height: 320 }} 
-          resizeMode="contain" 
-        />
-      </View>
-    );
-  }
+  // if (!fontsLoaded || showSplash) {
+  //   return (
+  //     <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f4f4f4" }}>
+  //       <Image 
+  //         source={require("./assets/splash.jpg")} 
+  //         style={{ width: 320, height: 320 }} 
+  //         resizeMode="contain" 
+  //       />
+  //     </View>
+  //   );
+  // }
 
   return (
     <SafeAreaView style={styles.safeArea}>

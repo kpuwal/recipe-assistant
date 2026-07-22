@@ -14,7 +14,7 @@ const config: ExpoConfig = {
       "expo-splash-screen",
       {
         image: "./assets/splash.jpg",
-        imageWidth: 220,
+        imageWidth: 320,
         resizeMode: "contain",
         backgroundColor: "#FAFAFA"
       }
@@ -27,6 +27,7 @@ const config: ExpoConfig = {
   },
 
   android: {
+    package: "com.kpuwal.recipeassistant",
     softwareKeyboardLayoutMode: "resize",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
@@ -42,6 +43,9 @@ const config: ExpoConfig = {
   // Environment variables go here
   extra: {
     apiUrl: process.env.EXPO_PUBLIC_API_URL,
+    "eas": {
+        "projectId": "e40096af-f004-416f-a2ff-9d06c1699873"
+      }
   },
 };
 

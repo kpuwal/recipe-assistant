@@ -20,3 +20,5 @@ apps/mobile/expo-env.d.ts
 apps/mobile/.env
 apps/mobile/.env.production
 apps/mobile/.env.development
+apps/mobile/eas.json
+apps/mobile/.gitignore
