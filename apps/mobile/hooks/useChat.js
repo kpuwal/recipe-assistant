@@ -3,9 +3,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Keyboard, Alert } from 'react-native';
 import axios from 'axios';
 
-const API_URL = "http://192.168.2.7:8000";
-
-export const useChat = (language = "nl") => {
+export const useChat = (language = "nl", API_URL) => {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
   const [activeTag, setActiveTag] = useState(null);
@@ -51,7 +49,6 @@ export const useChat = (language = "nl") => {
         response = await axios.get(`${API_URL}/recipes/search`, {
           params: { q: tag.query },
         });
-
         const recipeCount = response.data.length || 0;
         
         setChat((prev) => [
@@ -67,6 +64,11 @@ export const useChat = (language = "nl") => {
       }
     } catch (error) {
       console.error("Tag search error:", error);
+      if (axios.isAxiosError(error)) {
+          console.log("message:", error.message);
+          console.log("status:", error.response?.status);
+          console.log("data:", error.response?.data);
+      }
       Alert.alert("Fout", "Kon niet zoeken. Probeer het opnieuw.");
     } finally {
       setIsLoading(false);

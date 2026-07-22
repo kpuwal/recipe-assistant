@@ -54,7 +54,7 @@ export default function App() {
     searchByTag,
     sendMessage,
     deleteRecipe,
-  } = useChat("nl");
+  } = useChat("nl", API_URL);
 
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -80,6 +80,7 @@ export default function App() {
 
   const syncRecipes = useCallback(async () => {
     try {
+      console.log("API ", API_URL)
       const response = await axios.post(`${API_URL}/ingestion/sync-recipes`);
       const summary = response.data.summary;
       setSyncResult(summary);

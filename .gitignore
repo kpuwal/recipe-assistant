@@ -18,3 +18,5 @@ apps/mobile/.expo/
 apps/mobile/expo-env.d.ts
 
 apps/mobile/.env
+apps/mobile/.env.production
+apps/mobile/.env.development
