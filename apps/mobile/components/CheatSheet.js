@@ -30,9 +30,6 @@ const CheatSheet = ({ onClose, onSync }) => {
 
   return (
     <View style={styles.container}>
-      {/* <Text style={styles.welcome}>Welkom bij Onze KookBoek 👨‍🍳</Text> */}
-      {/* <Text style={styles.subtitle}>Typ gewoon wat je wilt — de app begrijpt je</Text> */}
-      
       <ScrollView style={styles.tipsList} showsVerticalScrollIndicator={false}>
         {tips.map((tip, index) => (
           <View key={index} style={styles.tipRow}>
@@ -77,19 +74,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
     justifyContent: "center",
   },
-  welcome: {
-    fontSize: 26,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 8,
-    color: "#1a1a1a",
-  },
-  subtitle: {
-    textAlign: "center",
-    color: "#666",
-    fontSize: 16,
-    marginBottom: 30,
-  },
   tipsList: {
     flex: 1,
   },
@@ -116,7 +100,7 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   syncButton: {
-    marginTop: 20,
+    marginTop: 10,
     backgroundColor: "#e74c3c",
     paddingVertical: 12,
     paddingHorizontal: 20,

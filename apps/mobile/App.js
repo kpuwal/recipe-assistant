@@ -28,11 +28,27 @@ import SyncResultModal from "./modals/SyncResultModal";
 import { useChat } from './hooks/useChat';
 import Constants from 'expo-constants';
 
-const API_URL = Constants.expoConfig?.extra?.apiUrl;
+// const API_URL = Constants.expoConfig?.extra?.apiUrl;
+
+// if (!API_URL) {
+//   throw new Error('EXPO_PUBLIC_API_URL is missing. Check your .env file.');
+// }
+
+
+// ==================== SAFE API_URL ====================
+const rawUrl = Constants.expoConfig?.extra?.apiUrl;
+console.log(rawUrl)
+
+const API_URL = rawUrl 
+  ? rawUrl.trim()   // remove accidental spaces
+  : null;
 
 if (!API_URL) {
-  throw new Error('EXPO_PUBLIC_API_URL is missing. Check your .env file.');
+  console.error("CRITICAL ERROR: EXPO_PUBLIC_API_URL is missing!");
 }
+
+// ==================== FONTS ====================
+
 
 
 export default function App() {
@@ -40,6 +56,23 @@ export default function App() {
     PlayfairRegular: PlayfairDisplay_400Regular,
     PlayfairBold: PlayfairDisplay_700Bold,
   });
+
+  const [showError, setShowError] = useState(false);
+
+  // Show nice error screen instead of crash
+  if (!API_URL) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
+          <Text style={{ fontSize: 18, color: "red", textAlign: "center" }}>
+            Configuration Error{'\n\n'}
+            API_URL is missing.{'\n'}
+            Please check your .env file and rebuild.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const {
     message,

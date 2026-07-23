@@ -3,6 +3,7 @@ node_modules/
 __pycache__/
 uv.lock
 .env
+INFO.txt
 
 # Backend
 apps/backend/.venv/

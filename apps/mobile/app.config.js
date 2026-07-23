@@ -1,6 +1,4 @@
-import { ExpoConfig } from 'expo/config';
-
-const config: ExpoConfig = {
+const config = {
   name: "RecipeAssistantApp",
   slug: "RecipeAssistantApp",
   version: "1.0.0",
@@ -40,12 +38,11 @@ const config: ExpoConfig = {
     favicon: "./assets/favicon.png"
   },
 
-  // Environment variables go here
   extra: {
-    apiUrl: process.env.EXPO_PUBLIC_API_URL,
-    "eas": {
-        "projectId": "e40096af-f004-416f-a2ff-9d06c1699873"
-      }
+    apiUrl: process.env.API_URL,
+    eas: {
+      projectId: "e40096af-f004-416f-a2ff-9d06c1699873"
+    }
   },
 };
 
