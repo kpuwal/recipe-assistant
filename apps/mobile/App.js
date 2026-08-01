@@ -4,6 +4,8 @@ import {
   Platform,
   Alert,
   StyleSheet,
+  View,
+  Text
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
@@ -36,20 +38,11 @@ import Constants from 'expo-constants';
 
 
 // ==================== SAFE API_URL ====================
-const rawUrl = Constants.expoConfig?.extra?.apiUrl;
-console.log(rawUrl)
-
-const API_URL = rawUrl 
-  ? rawUrl.trim()   // remove accidental spaces
-  : null;
+const API_URL = process.env.EXPO_PUBLIC_API_URL?.trim();
 
 if (!API_URL) {
   console.error("CRITICAL ERROR: EXPO_PUBLIC_API_URL is missing!");
 }
-
-// ==================== FONTS ====================
-
-
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -58,21 +51,6 @@ export default function App() {
   });
 
   const [showError, setShowError] = useState(false);
-
-  // Show nice error screen instead of crash
-  if (!API_URL) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
-          <Text style={{ fontSize: 18, color: "red", textAlign: "center" }}>
-            Configuration Error{'\n\n'}
-            API_URL is missing.{'\n'}
-            Please check your .env file and rebuild.
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   const {
     message,
@@ -94,12 +72,12 @@ export default function App() {
   const [syncResult, setSyncResult] = useState(null);
   const [showSplash, setShowSplash] = useState(true);
 
-  useEffect(() => {
-    if (fontsLoaded) {
-      const timer = setTimeout(() => setShowSplash(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [fontsLoaded]);
+  // useEffect(() => {
+  //   if (fontsLoaded) {
+  //     const timer = setTimeout(() => setShowSplash(false), 2000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [fontsLoaded]);
 
   const handleFavoriteChanged = useCallback((updatedRecipe) => {
     setSelectedRecipe(updatedRecipe);
@@ -155,35 +133,42 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView 
-        style={styles.container} 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
+      <View style={styles.container}>
+
         <Header />
-        
-        <TagFilters 
+
+        <TagFilters
           activeTag={activeTag}
           onTagPress={searchByTag}
           onAddRecipe={() => setAddModalVisible(true)}
           onClear={clearAll}
         />
 
-        <ChatMessages
-          ref={chatListRef}
-          chat={chat}
-          onShowRecipe={showRecipe}
-          onDeleteRecipe={deleteRecipe}
-          API_URL={API_URL}
-          onSync={syncRecipes}
-        />
+        {/* Chat / CheatSheet occupies the remaining screen */}
+        <View style={styles.chatContainer}>
+          <ChatMessages
+            ref={chatListRef}
+            chat={chat}
+            onShowRecipe={showRecipe}
+            onDeleteRecipe={deleteRecipe}
+            API_URL={API_URL}
+            onSync={syncRecipes}
+          />
+        </View>
 
-        <InputArea 
-          message={message}
-          setMessage={setMessage}
-          onSend={sendMessage}
-          isLoading={chatLoading}
-        />
-      </KeyboardAvoidingView>
+        {/* Input sits independently above the keyboard */}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <InputArea
+            message={message}
+            setMessage={setMessage}
+            onSend={sendMessage}
+            isLoading={chatLoading}
+          />
+        </KeyboardAvoidingView>
+
+      </View>
 
       <RecipeModal
         visible={modalVisible && !!selectedRecipe}
@@ -197,6 +182,7 @@ export default function App() {
         onFavoriteChanged={handleFavoriteChanged}
         onEditPress={(recipeToEdit) => {
           setModalVisible(false);
+
           setTimeout(() => {
             setSelectedRecipe(recipeToEdit);
             setEditModalVisible(true);
@@ -220,7 +206,10 @@ export default function App() {
         onClose={() => setAddModalVisible(false)}
         api_url={API_URL}
         onRecipeAdded={() => {
-          Alert.alert("Succes", "Recept succesvol toegevoegd!");
+          Alert.alert(
+            "Succes",
+            "Recept succesvol toegevoegd!"
+          );
         }}
       />
 
@@ -228,12 +217,42 @@ export default function App() {
         result={syncResult}
         onClose={() => setSyncResult(null)}
       />
+
       {chatLoading && <LoadingOverlay />}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#FAFAFA" },
-  container: { flex: 1 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#FAFAFA",
+  },
+
+  container: {
+    flex: 1,
+  },
+
+  chatContainer: {
+    flex: 1,
+  },
+
+  // inputWrapper: {
+  //   position: "absolute",
+  //   left: 0,
+  //   right: 0,
+  //   bottom: 0,
+  // },
+
+  splashContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f4f4f4",
+  },
+
+  splashImage: {
+    width: 320,
+    height: 320,
+  },
 });

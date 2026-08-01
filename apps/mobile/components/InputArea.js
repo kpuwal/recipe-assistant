@@ -18,7 +18,7 @@ const InputArea = ({ message, setMessage, onSend, isLoading }) => {
         activeOpacity={0.8}
         disabled={isLoading}
       >
-        <Text style={styles.sendButtonText}>↑</Text>
+        <Text style={styles.sendButtonText}>⏎</Text>
       </TouchableOpacity>
     </View>
   );

@@ -17,7 +17,14 @@ const config = {
         backgroundColor: "#FAFAFA"
       }
     ],
-    "expo-font"
+    ["expo-font",
+      {
+        fonts: [
+          "node_modules/@expo-google-fonts/playfair-display/400Regular/PlayfairDisplay_400Regular.ttf",
+          "node_modules/@expo-google-fonts/playfair-display/700Bold/PlayfairDisplay_700Bold.ttf"
+        ]
+      }
+    ]
   ],
 
   ios: {
@@ -39,7 +46,7 @@ const config = {
   },
 
   extra: {
-    apiUrl: process.env.API_URL,
+    apiUrl: process.env.EXPO_PUBLIC_API_URL,
     eas: {
       projectId: "e40096af-f004-416f-a2ff-9d06c1699873"
     }
