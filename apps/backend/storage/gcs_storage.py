@@ -124,3 +124,16 @@ class GCSStorage:
         except Exception as e:
             logger.error("Failed checking existence of %s: %s", blob_name, e)
             return False
+
+    def health_check(self) -> bool:
+        try:
+            self.bucket.reload()
+            logger.debug("GCS bucket is accessible: %s", self.bucket_name)
+            return True
+        except Exception as e:
+            logger.error(
+                "GCS health check failed for bucket %s: %s",
+                self.bucket_name,
+                e,
+            )
+            return False

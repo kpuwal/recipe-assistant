@@ -37,17 +37,40 @@ class SearchService:
 
         for recipe in recipes:
             # TIME FILTERS
-            if time_filter and recipe.time_minutes:
-                if time_filter["type"] == "max" and recipe.time_minutes > time_filter["value"]:
-                    continue
-                elif time_filter["type"] == "min" and recipe.time_minutes < time_filter["value"]:
-                    continue
-                elif time_filter["type"] == "exact" and recipe.time_minutes != time_filter["value"]:
-                    continue
-                elif time_filter["type"] == "range":
-                    if (recipe.time_minutes < time_filter.get("min") or 
-                        recipe.time_minutes > time_filter.get("max")):
+            # if time_filter and recipe.time_minutes:
+            #     if time_filter["type"] == "max" and recipe.time_minutes > time_filter["value"]:
+            #         continue
+            #     elif time_filter["type"] == "min" and recipe.time_minutes < time_filter["value"]:
+            #         continue
+            #     elif time_filter["type"] == "exact" and recipe.time_minutes != time_filter["value"]:
+            #         continue
+            #     elif time_filter["type"] == "range":
+            #         if (recipe.time_minutes < time_filter.get("min") or 
+            #             recipe.time_minutes > time_filter.get("max")):
+            #             continue
+            if time_filter:
+                if time_filter:
+                    if recipe.time_minutes is None:
                         continue
+
+                    if time_filter["type"] == "max":
+                        if recipe.time_minutes > time_filter["value"]:
+                            continue
+
+                    elif time_filter["type"] == "min":
+                        if recipe.time_minutes < time_filter["value"]:
+                            continue
+
+                    elif time_filter["type"] == "exact":
+                        if recipe.time_minutes != time_filter["value"]:
+                            continue
+
+                    elif time_filter["type"] == "range":
+                        if (
+                            recipe.time_minutes < time_filter["min"]
+                            or recipe.time_minutes > time_filter["max"]
+                        ):
+                            continue
 
             if not query_words:
                 results.append((recipe, 0))
@@ -60,20 +83,21 @@ class SearchService:
                 word_matched = False
 
                 # Use public fields
-                if word in (recipe.search_text or ""):
+                ing_text = " ".join(i.name for i in recipe.ingredients).lower()
+                if word in (recipe.search_text or "").lower():
                     score += 30
                     word_matched = True
-                elif word in (getattr(recipe, 'ingredient', '') or ""):
+                elif word in ing_text:
                     score += 20
                     word_matched = True
-                elif word in (getattr(recipe, 'category', '') or ""):
+                elif word in (getattr(recipe, 'category', '') or "").lower():
                     score += 40
                     word_matched = True
 
                 # Typo tolerance using tokens
                 if not word_matched and hasattr(recipe, 'tokens'):
                     for token in recipe.tokens:
-                        similarity = SequenceMatcher(None, word, token).ratio()
+                        similarity = SequenceMatcher(None, word.lower(), token.lower()).ratio()
                         if similarity >= 0.85:
                             score += 2
                             word_matched = True
@@ -99,9 +123,13 @@ class SearchService:
 
         return [recipe for recipe, score in results]
 
-    # clean_query, tokenize, normalize remain the same
+    # clean_query, tokenize, normalize
     def clean_query(self, text: str) -> List[str]:
-        stop_words = { ... }  # your stop words
+        stop_words = {
+            "de", "het", "een", "en", "van", "met", "voor", "in", "op", "is",
+            "om", "te", "ook", "er", "als", "a", "an", "the", "and", "or", "for",
+            "with", "of", "to", "recept", "recepten"
+        }
 
         words = self.tokenize(text)
 
