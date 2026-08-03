@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from storage.gcs_storage import GCSStorage
 from models.models import Recipe
-from services.search_index import build_search_index
+from services.search_index import build_search_index, SearchIndexBuilder, SearchIndex
 from core.helpers import slugify
 from utils.logger import logger
 
@@ -17,6 +17,7 @@ class RecipeRepository:
     def __init__(self, storage: GCSStorage):
         self.storage = storage
         self._cached_recipes: Optional[List[Recipe]] = None
+        self._cached_index: Optional[SearchIndex] = None
 
     def generate_id(self, source: str) -> str:
         source = source.lower()
@@ -68,11 +69,20 @@ class RecipeRepository:
         return recipes
 
     def list(self) -> List[Recipe]:
-        if self._cached_recipes is None:
+        if self._cached_recipes is None or self._cached_index is None:
             with self._lock:
-                if self._cached_recipes is None:
+                if self._cached_recipes is None or self._cached_index is None:
                     self._cached_recipes = self.load_all()
+                    self._cached_index = SearchIndexBuilder().build(self._cached_recipes)
         return self._cached_recipes
+
+    def get_search_index(self) -> Optional[SearchIndex]:
+        if self._cached_index is None:
+            with self._lock:
+                if self._cached_index is None:
+                    self._cached_recipes = self.load_all()
+                    self._cached_index = SearchIndexBuilder().build(self._cached_recipes)
+        return self._cached_index
 
     def get(self, recipe_id: str) -> Optional[Recipe]:
 
@@ -129,6 +139,7 @@ class RecipeRepository:
             recipe.image_extension = None
 
         self._cached_recipes = None
+        self._cached_index = None
         logger.info( "Saved recipe to GCS: %s (source=%s)", recipe.id, recipe.source)
         return recipe
 
@@ -146,6 +157,7 @@ class RecipeRepository:
             self.storage.delete_file(old_blob)
 
         self._cached_recipes = None
+        self._cached_index = None
         return self.save(recipe)
 
     def delete(self, recipe_id: str) -> bool:
@@ -166,6 +178,7 @@ class RecipeRepository:
                 )
 
         self._cached_recipes = None
+        self._cached_index = None
         logger.info("Deleted recipe: %s", recipe_id)
         return True
     

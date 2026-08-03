@@ -71,12 +71,15 @@ class RecipeService:
             logger.warning("Failed to delete recipe: %s (not found)", recipe_id)
         return success
 
+    def get_search_index(self):
+        return self.repo.get_search_index()
+
     def list_recipes(
-        self, 
-        source: Optional[str] = None, 
-        favorites_only: bool = False
+        self,
+        source: Optional[str] = None,
+        favorites_only: bool = False,
     ) -> List[Recipe]:
-        recipes = self.repo.load_all()
+        recipes = self.repo.list()
         
         if source:
             recipes = [r for r in recipes if r.source == source]
