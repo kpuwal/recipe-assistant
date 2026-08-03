@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
@@ -7,19 +8,20 @@ from core.settings import settings
 load_dotenv()
 
 from utils.logger import logger
+from utils.exceptions import AppError
 from routers.health import router as health_router
 from routers.recipes import router as recipes_router
 from routers.chat import router as chat_router
 from routers.ingestion import router as ingestion_router
 from routers.images import router as images_router
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Recipe Assistant started")
-
     yield
-
     logger.info("Recipe Assistant stopped")
+
 
 app = FastAPI(
     title="Recipe Assistant API",
@@ -36,12 +38,21 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
-# Routers
+
+@app.exception_handler(AppError)
+async def app_error_handler(request: Request, exc: AppError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message},
+    )
+
+
 app.include_router(health_router)
 app.include_router(recipes_router)
 app.include_router(chat_router)
 app.include_router(ingestion_router)
 app.include_router(images_router)
+
 
 if __name__ == "__main__":
     import uvicorn
