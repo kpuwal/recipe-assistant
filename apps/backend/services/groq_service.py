@@ -6,7 +6,9 @@ from pathlib import Path
 from models.models import Recipe
 from utils.logger import logger
 
-PROMPT_PATH = Path("core/groq_prompt.txt")
+# PROMPT_PATH = Path("core/groq_prompt.txt")
+PROMPT_PATH = Path(__file__).resolve().parent.parent / "core" / "groq_prompt.txt" 
+
 PROMPT_TEMPLATE = PROMPT_PATH.read_text(encoding="utf-8")
 
 class GroqService:
