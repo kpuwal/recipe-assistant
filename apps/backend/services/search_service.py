@@ -61,7 +61,7 @@ class SearchService:
                     ):
                         continue
                 filtered.append(recipe)
-            logger.info("Time-filtered %d recipes", len(filtered))
+            logger.info("Time-filtered %d recipes (no query)", len(filtered))
             return sorted(filtered, key=lambda r: r.title)
 
         recipes_by_id = {r.id: r for r in recipes}
@@ -74,8 +74,28 @@ class SearchService:
                     candidate_ids.update(ids)
 
         if not candidate_ids:
-            logger.info("Search for '%s' returned 0 results (no index hits)", query)
-            return []
+            if time_filter:
+                filtered = []
+                for recipe in recipes:
+                    if recipe.time_minutes is None:
+                        continue
+                    if time_filter["type"] == "max" and recipe.time_minutes > time_filter["value"]:
+                        continue
+                    elif time_filter["type"] == "min" and recipe.time_minutes < time_filter["value"]:
+                        continue
+                    elif time_filter["type"] == "exact" and recipe.time_minutes != time_filter["value"]:
+                        continue
+                    elif time_filter["type"] == "range" and (
+                        recipe.time_minutes < time_filter.get("min", 0)
+                        or recipe.time_minutes > time_filter.get("max", 9999)
+                    ):
+                        continue
+                    filtered.append(recipe)
+                logger.info("Time-filtered %d recipes (no index hits)", len(filtered))
+                return sorted(filtered, key=lambda r: r.title)
+            else:
+                logger.info("Search for '%s' returned 0 results (no index hits)", query)
+                return []
 
         candidates = [recipes_by_id[rid] for rid in candidate_ids if rid in recipes_by_id]
 
@@ -98,12 +118,13 @@ class SearchService:
                 ):
                     continue
 
+            ing_text = " ".join(i.name for i in recipe.ingredients).lower()
+            search_lower = (recipe.search_text or "").lower()
+            category_lower = (getattr(recipe, "category", "") or "").lower()
+            tokens = getattr(recipe, "tokens", []) or []
+
             for word in query_words:
                 word_matched = False
-
-                ing_text = " ".join(i.name for i in recipe.ingredients).lower()
-                search_lower = (recipe.search_text or "").lower()
-                category_lower = (getattr(recipe, "category", "") or "").lower()
 
                 if word in search_lower:
                     recipe_scores[recipe.id] += 30
@@ -114,9 +135,8 @@ class SearchService:
                 elif word in category_lower:
                     recipe_scores[recipe.id] += 40
                     word_matched = True
-
-                if not word_matched:
-                    for token in getattr(recipe, "tokens", []) or []:
+                elif len(word) >= 4:
+                    for token in tokens:
                         if SequenceMatcher(None, word.lower(), token.lower()).ratio() >= 0.85:
                             recipe_scores[recipe.id] += 2
                             word_matched = True
@@ -149,6 +169,7 @@ class SearchService:
             "de", "het", "een", "en", "van", "met", "voor", "in", "op", "is",
             "om", "te", "ook", "er", "als", "a", "an", "the", "and", "or", "for",
             "with", "of", "to", "recept", "recepten",
+            "min", "minuten", "minute",
         }
 
         words = tokenize(text)

@@ -4,11 +4,7 @@ import re
 def extract_time_filter(message: str):
     msg = message.lower().strip()
 
-    # Range:
-    # tussen 15 en 30
-    # van 15 tot 30
-    # 15-30
-    # 15 tot 30
+    # Range: "tussen 15 en 30", "15-30", "15 tot 30"
     match = re.search(
         r"(?:tussen|van)?\s*(\d+)\s*(?:-|tot|en)\s*(\d+)\s*(?:min|minuten)?",
         msg,
@@ -21,13 +17,7 @@ def extract_time_filter(message: str):
             "max": int(match.group(2)),
         }
 
-    # Maximum:
-    # onder 15
-    # minder dan 20
-    # maximaal 25
-    # max 25
-    # tot 30
-    # korter dan 30
+    # Maximum (keyword-prefixed): "onder 15", "minder dan 20", "tot 30", "korter dan 30"
     match = re.search(
         r"(onder|minder dan|maximaal|max|tot|korter dan)\s*"
         r"(\d+)\s*(?:min|minuten)?",
@@ -40,11 +30,7 @@ def extract_time_filter(message: str):
             "value": int(match.group(2)),
         }
 
-    # Minimum:
-    # langer dan 30
-    # meer dan 30
-    # vanaf 45
-    # minimaal 45
+    # Minimum: "langer dan 30", "meer dan 30", "vanaf 45", "minimaal 45"
     match = re.search(
         r"(langer dan|meer dan|vanaf|minimaal)\s*"
         r"(\d+)\s*(?:min|minuten)?",
@@ -57,18 +43,18 @@ def extract_time_filter(message: str):
             "value": int(match.group(2)),
         }
 
-    # Exact:
-    # 20 min
-    # 25 minuten
+    # Bare "15 min/minuten/minute" (no keyword) — treat as max with tolerance.
+    # "15 minuten" → max 20, "20 min" → max 25, etc.
     match = re.search(
         r"(\d+)\s*(?:min|minuten|minute)",
         msg,
     )
 
     if match:
+        value = int(match.group(1))
         return {
-            "type": "exact",
-            "value": int(match.group(1)),
+            "type": "max",
+            "value": value,
         }
 
     # Quick keywords
