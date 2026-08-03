@@ -13,11 +13,9 @@ class DropboxClient:
             app_key=os.getenv("DROPBOX_APP_KEY"),
             app_secret=os.getenv("DROPBOX_APP_SECRET"),
         )
-        # Parent folder that contains the subfolders
-        self.recipe_folder = os.getenv("DROPBOX_RECIPE_FOLDER", "/Recipes")
 
-        # Comma-separated list of subfolders to process (the 4 you want)
-        # Example in .env: DROPBOX_RECIPE_SUBFOLDERS=Italian,Mexican,Asian,Desserts
+        self.recipe_folder = os.getenv("DROPBOX_RECIPE_FOLDER", "/Recipes")
+        # Example DROPBOX_RECIPE_SUBFOLDERS=Italian,Mexican,Asian,Desserts
         subfolders_str = os.getenv("DROPBOX_RECIPE_SUBFOLDERS", "")
         self.recipe_subfolders = [s.strip() for s in subfolders_str.split(",") if s.strip()]
 
@@ -30,24 +28,7 @@ class DropboxClient:
             logger.error("Dropbox connection failed: %s", e)
             raise
 
-    # def list_files(self, path: str = None):
-    #     """Original method – kept for compatibility."""
-    #     folder_path = path or self.recipe_folder
-    #     logger.info("Listing Dropbox folder: %s", folder_path)
-
-    #     try:
-    #         result = self.dbx.files_list_folder(folder_path)
-    #         logger.info("Found %d items in folder", len(result.entries))
-    #         return result.entries
-    #     except Exception as e:
-    #         logger.error("Failed to list folder %s: %s", folder_path, e)
-    #         raise
-
     def list_files(self):
-        """
-        List all PDF files from the configured subfolders only.
-        Returns a list of FileMetadata objects.
-        """
         if not self.recipe_subfolders:
             logger.warning("No recipe subfolders configured (DROPBOX_RECIPE_SUBFOLDERS is empty)")
             return []
@@ -61,7 +42,6 @@ class DropboxClient:
             try:
                 result = self.dbx.files_list_folder(folder_path)
 
-                # Keep only PDF files (ignore folders and other files)
                 pdfs = [
                     entry for entry in result.entries
                     if isinstance(entry, dropbox.files.FileMetadata)
@@ -73,7 +53,6 @@ class DropboxClient:
 
             except dropbox.exceptions.ApiError as e:
                 logger.error("Failed to list folder %s: %s", folder_path, e)
-                # Continue with the other folders instead of crashing
                 continue
 
         logger.info("Total PDFs found across all subfolders: %d", len(all_pdfs))
