@@ -16,6 +16,7 @@ class RecipeRepository:
 
     def __init__(self, storage: GCSStorage):
         self.storage = storage
+        self._cached_recipes: Optional[List[Recipe]] = None
 
     def generate_id(self, source: str) -> str:
         source = source.lower()
@@ -67,7 +68,11 @@ class RecipeRepository:
         return recipes
 
     def list(self) -> List[Recipe]:
-        return self.load_all()
+        if self._cached_recipes is None:
+            with self._lock:
+                if self._cached_recipes is None:
+                    self._cached_recipes = self.load_all()
+        return self._cached_recipes
 
     def get(self, recipe_id: str) -> Optional[Recipe]:
 
@@ -123,8 +128,9 @@ class RecipeRepository:
             recipe.image_bytes = None
             recipe.image_extension = None
 
-            logger.info( "Saved recipe to GCS: %s (source=%s)", recipe.id, recipe.source)
-            return recipe
+        self._cached_recipes = None
+        logger.info( "Saved recipe to GCS: %s (source=%s)", recipe.id, recipe.source)
+        return recipe
 
     def update(self, recipe: Recipe) -> Optional[Recipe]:
         existing = self.get(recipe.id)
@@ -139,6 +145,7 @@ class RecipeRepository:
             old_blob = (f"recipes/" f"{old_source}/" f"{recipe.id}.json")
             self.storage.delete_file(old_blob)
 
+        self._cached_recipes = None
         return self.save(recipe)
 
     def delete(self, recipe_id: str) -> bool:
@@ -158,8 +165,9 @@ class RecipeRepository:
                     f"images/{recipe.source}/{recipe.image}"
                 )
 
-            logger.info("Deleted recipe: %s", recipe_id)
-            return True
+        self._cached_recipes = None
+        logger.info("Deleted recipe: %s", recipe_id)
+        return True
     
     def _map_source(self, source: str) -> str:
         if source == "picnic":
