@@ -1,11 +1,10 @@
-import re
 from typing import List, Optional, Protocol
 from difflib import SequenceMatcher
 from collections import defaultdict
 
 from models.models import Recipe
 from services.search_parser import extract_time_filter
-from services.search_index import SearchIndex
+from services.search_index import SearchIndex, normalize, tokenize
 from utils.logger import logger
 
 
@@ -152,15 +151,11 @@ class SearchService:
             "with", "of", "to", "recept", "recepten",
         }
 
-        words = self.tokenize(text)
+        words = tokenize(text)
 
         return [
             word for word in words
             if word not in stop_words and not word.isdigit()
         ]
 
-    def tokenize(self, text: str) -> List[str]:
-        return re.findall(r"[a-zA-ZÀ-ÿ]+", text.lower())
 
-    def normalize(self, text: str) -> str:
-        return text.lower().replace("-", " ")

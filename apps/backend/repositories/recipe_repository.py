@@ -18,6 +18,15 @@ class RecipeRepository:
         self.storage = storage
         self._cached_recipes: Optional[List[Recipe]] = None
         self._cached_index: Optional[SearchIndex] = None
+        self._cached_recipes_by_id: Optional[dict] = None
+
+    def _clear_cache(self) -> None:
+        self._cached_recipes = None
+        self._cached_index = None
+        self._cached_recipes_by_id = None
+
+    def _rebuild_by_id_cache(self) -> None:
+        self._cached_recipes_by_id = {r.id: r for r in self._cached_recipes or []}
 
     def generate_id(self, source: str) -> str:
         source = source.lower()
@@ -44,7 +53,7 @@ class RecipeRepository:
 
         next_number = max(numbers, default=0) + 1
         return f"{prefix}{next_number:03d}"
-    
+
     def load_all(self) -> List[Recipe]:
         recipes = []
 
@@ -74,6 +83,7 @@ class RecipeRepository:
                 if self._cached_recipes is None or self._cached_index is None:
                     self._cached_recipes = self.load_all()
                     self._cached_index = SearchIndexBuilder().build(self._cached_recipes)
+                    self._rebuild_by_id_cache()
         return self._cached_recipes
 
     def get_search_index(self) -> Optional[SearchIndex]:
@@ -82,10 +92,21 @@ class RecipeRepository:
                 if self._cached_index is None:
                     self._cached_recipes = self.load_all()
                     self._cached_index = SearchIndexBuilder().build(self._cached_recipes)
+                    self._rebuild_by_id_cache()
         return self._cached_index
 
     def get(self, recipe_id: str) -> Optional[Recipe]:
+        if self._cached_recipes_by_id is not None and recipe_id in self._cached_recipes_by_id:
+            return self._cached_recipes_by_id[recipe_id]
 
+        recipe = self._load_from_gcs(recipe_id)
+
+        if recipe is not None and self._cached_recipes is not None:
+            self._cached_recipes_by_id[recipe_id] = recipe
+
+        return recipe
+
+    def _load_from_gcs(self, recipe_id: str) -> Optional[Recipe]:
         for source in ["imported", "ai", "personal"]:
             blob_name = (f"recipes/" f"{source}/" f"{recipe_id}.json")
 
@@ -100,7 +121,7 @@ class RecipeRepository:
                 logger.error("Failed loading %s: %s", blob_name, e)
 
         return None
-    
+
     def save(self, recipe: Recipe) -> Recipe:
         with self._lock:
             recipe.source = self._map_source(recipe.source or "personal")
@@ -134,14 +155,13 @@ class RecipeRepository:
 
             if not uploaded:
                 raise Exception(f"GCS upload failed: {blob_name}")
-            
+
             recipe.image_bytes = None
             recipe.image_extension = None
 
-        self._cached_recipes = None
-        self._cached_index = None
-        logger.info( "Saved recipe to GCS: %s (source=%s)", recipe.id, recipe.source)
-        return recipe
+            self._clear_cache()
+            logger.info( "Saved recipe to GCS: %s (source=%s)", recipe.id, recipe.source)
+            return recipe
 
     def update(self, recipe: Recipe) -> Optional[Recipe]:
         existing = self.get(recipe.id)
@@ -156,8 +176,7 @@ class RecipeRepository:
             old_blob = (f"recipes/" f"{old_source}/" f"{recipe.id}.json")
             self.storage.delete_file(old_blob)
 
-        self._cached_recipes = None
-        self._cached_index = None
+        self._clear_cache()
         return self.save(recipe)
 
     def delete(self, recipe_id: str) -> bool:
@@ -169,7 +188,7 @@ class RecipeRepository:
                 return False
 
             self.storage.delete_file(
-                f"recipes/{recipe.source}/{recipe.id}.json"
+                f"recipes/{recipe.source}/{recipe_id}.json"
             )
 
             if recipe.image:
@@ -177,11 +196,10 @@ class RecipeRepository:
                     f"images/{recipe.source}/{recipe.image}"
                 )
 
-        self._cached_recipes = None
-        self._cached_index = None
-        logger.info("Deleted recipe: %s", recipe_id)
-        return True
-    
+            self._clear_cache()
+            logger.info("Deleted recipe: %s", recipe_id)
+            return True
+
     def _map_source(self, source: str) -> str:
         if source == "picnic":
             return "imported"
