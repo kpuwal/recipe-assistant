@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 
@@ -5,21 +7,41 @@ from core.dependencies import get_gcs_storage
 
 router = APIRouter(prefix="/images", tags=["images"])
 
+ALLOWED_SOURCES = {"imported", "ai", "personal"}
+
 
 @router.get("/{source}/{filename}")
-async def get_image(
+def get_image(
     source: str,
     filename: str,
     storage=Depends(get_gcs_storage),
 ):
 
-    blob_name = f"images/{source}/{filename}"
+    if source not in ALLOWED_SOURCES:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid source"
+        )
+
+    safe_filename = Path(filename).name
+
+    if safe_filename != filename:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid filename"
+        )
+
+    blob_name = f"images/{source}/{safe_filename}"
+
     image = storage.download_bytes(blob_name)
 
     if image is None:
-        raise HTTPException(status_code=404, detail="Image not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Image not found"
+        )
 
-    extension = filename.split(".")[-1].lower()
+    extension = Path(safe_filename).suffix.lower().lstrip(".")
 
     media_types = {
         "png": "image/png",
@@ -30,5 +52,8 @@ async def get_image(
 
     return Response(
         content=image,
-        media_type=media_types.get(extension, "application/octet-stream")
+        media_type=media_types.get(
+            extension,
+            "application/octet-stream",
+        ),
     )

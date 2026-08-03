@@ -5,13 +5,17 @@ from services.recipe_service import RecipeService
 from services.search_service import SearchService
 from core.dependencies import get_recipe_service, get_search_service
 from services.recipe_scaler import recipe_scaler
-from models.models import Recipe
+from models.models import (
+    Recipe,
+    RecipeCreate,
+    RecipeUpdate,
+)
 from utils.logger import logger
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
 
-@router.get("")
-async def list_recipes(
+@router.get("", response_model=list[Recipe])
+def list_recipes(
     source: Optional[str] = Query(None),
     favorites_only: bool = Query(False),
     service: RecipeService = Depends(get_recipe_service)
@@ -21,7 +25,7 @@ async def list_recipes(
     return recipes
 
 @router.get("/search")
-async def search_recipes(
+def search_recipes(
     q: str | None = None,
     ingredient: str | None = None,
     max_time: int | None = None,
@@ -32,8 +36,8 @@ async def search_recipes(
     logger.info("Search for '%s' returned %d recipes", query, len(recipes))
     return recipes
 
-@router.get("/{recipe_id}")
-async def get_recipe(
+@router.get("/{recipe_id}", response_model=Recipe)
+def get_recipe(
     recipe_id: str,
     service: RecipeService = Depends(get_recipe_service)
 ):
@@ -43,26 +47,26 @@ async def get_recipe(
         raise HTTPException(status_code=404, detail="Recipe not found")
     return recipe
 
-@router.post("/")
-async def create_recipe(
-    recipe_data: dict,
+@router.post("/", response_model=Recipe)
+def create_recipe(
+    recipe_data: RecipeCreate,
     service: RecipeService = Depends(get_recipe_service)
 ):
-    recipe = service.create_recipe(recipe_data)
+    recipe = service.create_recipe(recipe_data.model_dump())
     logger.info("Created new recipe: %s", recipe.title)
     return recipe
 
-@router.post("/ai")
-async def create_ai_recipe(
-    recipe_data: dict,
+@router.post("/ai", response_model=Recipe)
+def create_ai_recipe(
+    recipe_data: RecipeCreate,
     service: RecipeService = Depends(get_recipe_service)
 ):
-    recipe = service.save_ai_recipe(recipe_data)
+    recipe = service.save_ai_recipe(recipe_data.model_dump())
     logger.info("Saved AI recipe: %s", recipe.title)
     return recipe
 
 @router.put("/{recipe_id}/favorite")
-async def toggle_favorite(
+def toggle_favorite(
     recipe_id: str,
     service: RecipeService = Depends(get_recipe_service)
 ):
@@ -74,7 +78,7 @@ async def toggle_favorite(
     return recipe
 
 @router.get("/{recipe_id}/scale")
-async def scale_recipe(
+def scale_recipe(
     recipe_id: str,
     persons: int,
     service: RecipeService = Depends(get_recipe_service)
@@ -85,10 +89,10 @@ async def scale_recipe(
         raise HTTPException(status_code=404, detail="Recipe not found")
     return recipe_scaler.scale(recipe, persons)
 
-@router.put("/{recipe_id}")
-async def update_recipe(
+@router.put("/{recipe_id}", response_model=Recipe)
+def update_recipe(
     recipe_id: str,
-    recipe_data: dict,
+    recipe_data: RecipeUpdate,
     service: RecipeService = Depends(get_recipe_service)
 ):
     existing = service.get_recipe(recipe_id)
@@ -97,7 +101,7 @@ async def update_recipe(
         raise HTTPException(status_code=404, detail="Recipe not found")
 
     try:
-        update_data = {**existing.model_dump(), **recipe_data}
+        update_data = {**existing.model_dump(), **recipe_data.model_dump(exclude_unset=True)}
         update_data["id"] = recipe_id
         update_data["source"] = existing.source
         updated_recipe = Recipe(**update_data)
@@ -111,7 +115,7 @@ async def update_recipe(
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/{recipe_id}")
-async def delete_recipe(
+def delete_recipe(
     recipe_id: str,
     service: RecipeService = Depends(get_recipe_service)
 ):

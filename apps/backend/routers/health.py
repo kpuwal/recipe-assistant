@@ -17,7 +17,7 @@ def health_check():
 
 
 @router.get("/healthz")
-async def readiness_probe(
+def readiness_probe(
     storage: GCSStorage = Depends(get_gcs_storage),
 ):
     if not storage.health_check():
@@ -37,7 +37,7 @@ async def readiness_probe(
 
 
 @router.get("/")
-async def root():
+def root():
     logger.info("Root endpoint accessed")
     return {
         "status": "Recipe Assistant API is running"

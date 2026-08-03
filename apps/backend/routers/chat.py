@@ -9,7 +9,7 @@ from utils.logger import logger
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 @router.post("")
-async def chat(
+def chat(
     request: ChatRequest,
     search_service: SearchService = Depends(get_search_service)
 ):

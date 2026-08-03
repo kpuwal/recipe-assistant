@@ -32,7 +32,7 @@ def get_pipeline(
     )
 
 @router.post("/sync-recipes")
-async def sync_recipes(
+def sync_recipes(
     dry_run: bool = False,
     pipeline: PDFIngestionPipeline = Depends(get_pipeline)
 ):
