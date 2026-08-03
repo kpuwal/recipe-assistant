@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from models.models import Recipe
 from repositories.recipe_repository import RecipeRepository
+from services.search_index import SearchIndex
 from utils.logger import logger
 
 
@@ -71,7 +72,7 @@ class RecipeService:
             logger.warning("Failed to delete recipe: %s (not found)", recipe_id)
         return success
 
-    def get_search_index(self):
+    def get_search_index(self) -> Optional[SearchIndex]:
         return self.repo.get_search_index()
 
     def list_recipes(
