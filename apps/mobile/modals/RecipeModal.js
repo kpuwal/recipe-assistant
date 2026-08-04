@@ -10,9 +10,9 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons, Entypo, MaterialIcons } from "@expo/vector-icons";
-import axios from "axios";
+import apiService, { buildRecipeImageUrl } from "../services/api";
 
-const RecipeModal = ({ visible, recipe, api_url, onClose, onFavoriteChanged, onEditPress, onRecipeSaved }) => {
+const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress, onRecipeSaved }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [displayRecipe, setDisplayRecipe] = useState(null);
   const [selectedPersons, setSelectedPersons] = useState(4);
@@ -48,7 +48,7 @@ const RecipeModal = ({ visible, recipe, api_url, onClose, onFavoriteChanged, onE
         image: null, // AI recipes usually have null image
       };
 
-      const response = await axios.post(`${api_url}/recipes/`, recipeToSave);
+      const response = await apiService.createRecipe(recipeToSave);
 
       onRecipeSaved?.(response.data);
       onClose();
@@ -65,8 +65,8 @@ const RecipeModal = ({ visible, recipe, api_url, onClose, onFavoriteChanged, onE
     if (loading) return;
     
     setLoading(true);
-    try {
-      const response = await axios.put(`${api_url}/recipes/${recipe.id}/favorite`);
+  try {
+    const response = await apiService.toggleFavorite(recipe.id);
       
       const updatedRecipe = response.data;
       setIsFavorite(updatedRecipe.is_favorite);
@@ -91,14 +91,9 @@ const RecipeModal = ({ visible, recipe, api_url, onClose, onFavoriteChanged, onE
       return;
     }
 
-    try {
-      setScaling(true);
-      const response = await axios.get(
-        `${api_url}/recipes/${recipe.id}/scale`,
-        {
-          params: { persons },
-        }
-      );
+  try {
+    setScaling(true);
+    const response = await apiService.scaleRecipe(recipe.id, persons);
 
       setDisplayRecipe(response.data);
       setSelectedPersons(persons);
@@ -180,13 +175,13 @@ const RecipeModal = ({ visible, recipe, api_url, onClose, onFavoriteChanged, onE
 
         <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
           {/* Recipe Image */}
-          {recipe.image && (
-            <Image
-              source={{ uri: `${api_url}/images/${recipe.source}/${recipe.image}` }}
-              style={styles.recipeImage}
-              resizeMode="cover"
-            />
-          )}
+  {recipe.image && (
+    <Image
+      source={{ uri: buildRecipeImageUrl(recipe.source, recipe.image) }}
+      style={styles.recipeImage}
+      resizeMode="cover"
+    />
+  )}
 
           {/* Meta Info */}
           <View style={styles.metaContainer}>

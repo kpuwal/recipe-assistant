@@ -1,19 +1,17 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
   Alert,
   StyleSheet,
   View,
-  Text
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import axios from "axios";
 
 import { useFonts } from 'expo-font';
-import { 
+import {
   PlayfairDisplay_400Regular,
-  PlayfairDisplay_700Bold 
+  PlayfairDisplay_700Bold
 } from '@expo-google-fonts/playfair-display';
 
 import Header from "./components/Header";
@@ -28,21 +26,7 @@ import AddRecipeModal from "./modals/AddRecipeModal";
 import SyncResultModal from "./modals/SyncResultModal";
 
 import { useChat } from './hooks/useChat';
-import Constants from 'expo-constants';
-
-// const API_URL = Constants.expoConfig?.extra?.apiUrl;
-
-// if (!API_URL) {
-//   throw new Error('EXPO_PUBLIC_API_URL is missing. Check your .env file.');
-// }
-
-
-// ==================== SAFE API_URL ====================
-const API_URL = process.env.EXPO_PUBLIC_API_URL?.trim();
-
-if (!API_URL) {
-  console.error("CRITICAL ERROR: EXPO_PUBLIC_API_URL is missing!");
-}
+import { API_URL, apiService } from './services/api';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -63,7 +47,7 @@ export default function App() {
     searchByTag,
     sendMessage,
     deleteRecipe,
-  } = useChat("nl", API_URL);
+  } = useChat("nl");
 
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -71,13 +55,6 @@ export default function App() {
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
   const [showSplash, setShowSplash] = useState(true);
-
-  // useEffect(() => {
-  //   if (fontsLoaded) {
-  //     const timer = setTimeout(() => setShowSplash(false), 2000);
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [fontsLoaded]);
 
   const handleFavoriteChanged = useCallback((updatedRecipe) => {
     setSelectedRecipe(updatedRecipe);
@@ -87,49 +64,35 @@ export default function App() {
     setSelectedRecipe(updatedRecipe);
   }, []);
 
-  const syncRecipes = useCallback(async () => {
-    try {
-      const response = await axios.post(`${API_URL}/ingestion/sync-recipes`);
-      const summary = response.data.summary;
-      setSyncResult(summary);
-    } catch (error) {
-      console.error("Sync error:", error);
-      Alert.alert(
-        "Sync fout",
-        error?.response?.data?.detail || "Kon recepten niet synchroniseren."
-      );
-    }
-  }, []);
+const syncRecipes = useCallback(async () => {
+  try {
+    const response = await apiService.syncRecipes();
+    const summary = response.data.summary;
+    setSyncResult(summary);
+  } catch (error) {
+    console.error("Sync error:", error);
+    Alert.alert(
+      "Sync fout",
+      error?.response?.data?.detail || "Kon recepten niet synchroniseren."
+    );
+  }
+}, []);
 
-  const showRecipe = useCallback(async (recipe) => {
-    if (recipe.source === "ai") {
-      setSelectedRecipe(recipe);
-      setModalVisible(true);
-      return;
-    }
-    try {
-      const response = await axios.get(`${API_URL}/recipes/${recipe.id}`, {
-        params: { lang: "nl" },
-      });
-      setSelectedRecipe(response.data);
-      setModalVisible(true);
-    } catch (error) {
-      console.log(error);
-      Alert.alert("Fout", "Kon recept niet laden.");
-    }
-  }, []);
-
-  // if (!fontsLoaded || showSplash) {
-  //   return (
-  //     <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f4f4f4" }}>
-  //       <Image 
-  //         source={require("./assets/splash.jpg")} 
-  //         style={{ width: 320, height: 320 }} 
-  //         resizeMode="contain" 
-  //       />
-  //     </View>
-  //   );
-  // }
+const showRecipe = useCallback(async (recipe) => {
+  if (recipe.source === "ai") {
+    setSelectedRecipe(recipe);
+    setModalVisible(true);
+    return;
+  }
+  try {
+    const response = await apiService.getRecipe(recipe.id, "nl");
+    setSelectedRecipe(response.data);
+    setModalVisible(true);
+  } catch (error) {
+    console.log(error);
+    Alert.alert("Fout", "Kon recept niet laden.");
+  }
+}, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -170,12 +133,11 @@ export default function App() {
 
       </View>
 
-      <RecipeModal
-        visible={modalVisible && !!selectedRecipe}
-        recipe={selectedRecipe}
-        language="nl"
-        api_url={API_URL}
-        onClose={() => {
+<RecipeModal
+  visible={modalVisible && !!selectedRecipe}
+  recipe={selectedRecipe}
+  language="nl"
+  onClose={() => {
           setModalVisible(false);
           setTimeout(() => setSelectedRecipe(null), 300);
         }}

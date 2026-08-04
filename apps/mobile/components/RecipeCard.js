@@ -2,12 +2,13 @@
 import React, { useMemo, memo } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { buildRecipeImageUrl } from '../services/api';
 
 const RecipeCard = memo(({ recipe, onPress, onDelete, API_URL }) => {
-  const imageUri = useMemo(() => {
-    if (!recipe.image || !API_URL) return null;
-    return `${API_URL}/images/${recipe.source}/${recipe.image}`;
-  }, [API_URL, recipe.image, recipe.source]);
+  const imageUri = useMemo(() => buildRecipeImageUrl(recipe.source, recipe.image), [
+    recipe.source,
+    recipe.image,
+  ]);
 
   const handleDelete = (e) => {
     e.stopPropagation();
@@ -73,7 +74,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
-    shadowRadius: 6,
+    shadowRadius: 2,
     borderWidth: 1,
     borderColor: "#f0f0f0",
   },

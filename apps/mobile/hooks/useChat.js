@@ -1,9 +1,9 @@
 // hooks/useChat.js
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { Keyboard, Alert } from 'react-native';
-import axios from 'axios';
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Keyboard, Alert } from "react-native";
+import apiService from "../services/api";
 
-export const useChat = (language = "nl", API_URL) => {
+export const useChat = (language = "nl") => {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
   const [activeTag, setActiveTag] = useState(null);
@@ -29,14 +29,14 @@ export const useChat = (language = "nl", API_URL) => {
 
   const searchByTag = useCallback(async (tag) => {
     setActiveTag(tag.label);
-    
+
     try {
       setIsLoading(true);
       let response;
 
       if (tag.query === "favorieten") {
-        response = await axios.get(`${API_URL}/recipes?favorites_only=true`);
-        
+        response = await apiService.getFavorites();
+
         setChat((prev) => [
           {
             user: `Snelzoeken: ${tag.label}`,
@@ -46,16 +46,14 @@ export const useChat = (language = "nl", API_URL) => {
           ...prev,
         ]);
       } else {
-        response = await axios.get(`${API_URL}/recipes/search`, {
-          params: { q: tag.query },
-        });
+        response = await apiService.searchRecipes(tag.query);
         const recipeCount = response.data.length || 0;
-        
+
         setChat((prev) => [
           {
             user: `Snelzoeken: ${tag.label}`,
-            bot: recipeCount > 0 
-              ? `${recipeCount} recepten gevonden.` 
+            bot: recipeCount > 0
+              ? `${recipeCount} recepten gevonden.`
               : "Geen recepten gevonden voor deze zoekopdracht.",
             recipes: response.data || [],
           },
@@ -64,11 +62,6 @@ export const useChat = (language = "nl", API_URL) => {
       }
     } catch (error) {
       console.error("Tag search error:", error);
-      if (axios.isAxiosError(error)) {
-          console.log("message:", error.message);
-          console.log("status:", error.response?.status);
-          console.log("data:", error.response?.data);
-      }
       Alert.alert("Fout", "Kon niet zoeken. Probeer het opnieuw.");
     } finally {
       setIsLoading(false);
@@ -81,10 +74,7 @@ export const useChat = (language = "nl", API_URL) => {
     Keyboard.dismiss();
     try {
       setIsLoading(true);
-      const response = await axios.post(`${API_URL}/chat`, {
-        message,
-        language,
-      });
+      const response = await apiService.chat(message, language);
 
       setChat((prev) => [
         {
@@ -98,7 +88,7 @@ export const useChat = (language = "nl", API_URL) => {
     } catch (error) {
       console.log(error);
       Alert.alert(
-        "Fout", 
+        "Fout",
         error?.response?.data ? JSON.stringify(error.response.data) : error.message
       );
     } finally {
@@ -117,7 +107,7 @@ export const useChat = (language = "nl", API_URL) => {
           style: "destructive",
           onPress: async () => {
             try {
-              await axios.delete(`${API_URL}/recipes/${recipeId}`);
+              await apiService.deleteRecipe(recipeId);
               setChat((prev) =>
                 prev.map((msg) => ({
                   ...msg,
