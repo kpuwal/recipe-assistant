@@ -1,25 +1,30 @@
 // components/RecipeCard.js
-import React from 'react';
+import React, { useMemo, memo } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const RecipeCard = ({ recipe, onPress, onDelete, API_URL }) => {
+const RecipeCard = memo(({ recipe, onPress, onDelete, API_URL }) => {
+  const imageUri = useMemo(() => {
+    if (!recipe.image || !API_URL) return null;
+    return `${API_URL}/images/${recipe.source}/${recipe.image}`;
+  }, [API_URL, recipe.image, recipe.source]);
+
   const handleDelete = (e) => {
     e.stopPropagation();
     onDelete(recipe.id);
   };
 
   return (
-    <TouchableOpacity 
-      style={styles.recipeCard} 
-      onPress={() => onPress(recipe)} 
+    <TouchableOpacity
+      style={styles.recipeCard}
+      onPress={() => onPress(recipe)}
       activeOpacity={0.9}
     >
-      {recipe.image ? (
-        <Image 
-          source={{ uri: `${API_URL}/images/${recipe.source}/${recipe.image}` }} 
-          style={styles.recipeThumbnail} 
-          resizeMode="cover" 
+      {imageUri ? (
+        <Image
+          source={{ uri: imageUri }}
+          style={styles.recipeThumbnail}
+          resizeMode="cover"
         />
       ) : (
         <View style={styles.placeholderImage}>
@@ -53,8 +58,8 @@ const RecipeCard = ({ recipe, onPress, onDelete, API_URL }) => {
         </View>
       </View>
     </TouchableOpacity>
-  );
-};
+  )
+});
 
 const styles = StyleSheet.create({
   recipeCard: {
