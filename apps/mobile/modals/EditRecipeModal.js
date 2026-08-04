@@ -1,12 +1,10 @@
-// EditRecipeModal.js - Modal for editing an existing recipe
-import React, { useState, useEffect } from "react";
+import React, { useCallback } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Modal,
   Keyboard,
   TouchableWithoutFeedback,
@@ -15,104 +13,32 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
+import useRecipeForm from "../hooks/useRecipeForm";
 
-const EditRecipeModal = ({
-  visible, 
-  recipe, 
-  api_url, 
-  onClose, 
-  onRecipeUpdated 
- }) => {
-  const [form, setForm] = useState({
-    title: "",
-    persons: "",
-    time_minutes: "",
-    category: "",
-    ingredients: [{ name: "", quantity: "" }],
-    steps: [""],
-    tips: "",
-    image: "",
-  });
+const EditRecipeModal = ({ visible, recipe, api_url, onClose, onRecipeUpdated }) => {
+  const handleUpdate = useCallback(
+    async recipeData => {
+      if (!recipe?.id) return;
+      return axios.put(`${api_url}/recipes/${recipe.id}`, { ...recipeData, id: recipe.id });
+    },
+    [api_url, recipe?.id]
+  );
 
-  // Populate form when a recipe is provided
-  useEffect(() => {
-    if (recipe) {
-      setForm({
-        title: recipe.title || "",
-        persons: recipe.persons ? String(recipe.persons) : "",
-        time_minutes: recipe.time_minutes ? String(recipe.time_minutes) : "",
-        category: recipe.category || "",
-        ingredients: recipe.ingredients?.length ? recipe.ingredients : [{ name: "", quantity: "" }],
-        steps: recipe.steps?.length ? recipe.steps : [""],
-        tips: recipe.tips || "",
-        image: recipe.image || "",
-      });
-    }
-  }, [recipe]);
-
-  const updateField = (field, value) => {
-    setForm(prev => ({ ...prev, [field]: value }));
-  };
-
-  const updateIngredient = (index, field, value) => {
-    const newIngredients = [...form.ingredients];
-    newIngredients[index][field] = value;
-    setForm(prev => ({ ...prev, ingredients: newIngredients }));
-  };
-
-  const addIngredient = () => {
-    setForm(prev => ({
-      ...prev,
-      ingredients: [...prev.ingredients, { name: "", quantity: "" }],
-    }));
-  };
-
-  const removeIngredient = index => {
-    if (form.ingredients.length === 1) return;
-    setForm(prev => ({
-      ...prev,
-      ingredients: prev.ingredients.filter((_, i) => i !== index),
-    }));
-  };
-
-  const addStep = () => {
-    setForm(prev => ({ ...prev, steps: [...prev.steps, ""] }));
-  };
-
-  const removeStep = index => {
-    if (form.steps.length === 1) return;
-    setForm(prev => ({
-      ...prev,
-      steps: prev.steps.filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleSubmit = async () => {
-    if (!form.title.trim()) {
-      Alert.alert("Error", "Recipe title is required");
-      return;
-    }
-    const validIngredients = form.ingredients.filter(ing => ing.name.trim());
-    const recipeData = {
-      title: form.title.trim(),
-      source: "personal",
-      persons: form.persons ? parseInt(form.persons) : null,
-      time_minutes: form.time_minutes ? parseInt(form.time_minutes) : null,
-      category: form.category.trim() || "other",
-      ingredients: validIngredients,
-      steps: form.steps.filter(s => s.trim()),
-      tips: form.tips.trim() || null,
-      image: form.image.trim() || null,
-    };
-    try {
-      const response = await axios.put(`${api_url}/recipes/${recipe.id}`, recipeData);
+  const handleSuccess = useCallback(
+    response => {
       onRecipeUpdated?.(response.data);
       onClose();
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "Failed to update recipe. Please try again.");
-    }
-  };
+    },
+    [onClose, onRecipeUpdated]
+  );
+
+  const { form, submitting, handleSubmit, updateField, updateIngredient, addIngredient, removeIngredient, addStep, removeStep } =
+    useRecipeForm({
+      api_url,
+      initialValues: recipe,
+      onSubmit: handleUpdate,
+      onSuccess: handleSuccess,
+    });
 
   return (
     <Modal
@@ -136,16 +62,16 @@ const EditRecipeModal = ({
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                 <Ionicons name="close" size={28} color="#333" />
               </TouchableOpacity>
-              <Text style={styles.title}>✏️ Edit Recipe</Text>
+              <Text style={styles.title}>Edit Recipe</Text>
             </View>
 
-            {/* Form – same structure as AddRecipeModal */}
             <TextInput
               style={styles.input}
               placeholder="Recipe Title *"
               value={form.title}
               onChangeText={v => updateField("title", v)}
             />
+
             <View style={styles.row}>
               <TextInput
                 style={[styles.input, { flex: 1 }]}
@@ -162,6 +88,7 @@ const EditRecipeModal = ({
                 onChangeText={v => updateField("time_minutes", v)}
               />
             </View>
+
             <TextInput
               style={styles.input}
               placeholder="Category"
@@ -170,21 +97,21 @@ const EditRecipeModal = ({
             />
 
             <Text style={styles.sectionTitle}>Ingredients</Text>
-            {form.ingredients.map((ing, idx) => (
-              <View key={idx} style={styles.ingredientRow}>
+            {form.ingredients.map((ing, index) => (
+              <View key={index} style={styles.ingredientRow}>
                 <TextInput
                   style={[styles.input, { flex: 2 }]}
                   placeholder="Quantity"
                   value={ing.quantity}
-                  onChangeText={v => updateIngredient(idx, "quantity", v)}
+                  onChangeText={v => updateIngredient(index, "quantity", v)}
                 />
                 <TextInput
                   style={[styles.input, { flex: 3 }]}
                   placeholder="Ingredient name *"
                   value={ing.name}
-                  onChangeText={v => updateIngredient(idx, "name", v)}
+                  onChangeText={v => updateIngredient(index, "name", v)}
                 />
-                <TouchableOpacity onPress={() => removeIngredient(idx)} style={styles.removeBtn}>
+                <TouchableOpacity onPress={() => removeIngredient(index)} style={styles.removeBtn}>
                   <Text style={styles.removeText}>✕</Text>
                 </TouchableOpacity>
               </View>
@@ -194,21 +121,21 @@ const EditRecipeModal = ({
             </TouchableOpacity>
 
             <Text style={styles.sectionTitle}>Preparation Steps</Text>
-            {form.steps.map((step, idx) => (
-              <View key={idx} style={styles.listItem}>
+            {form.steps.map((step, index) => (
+              <View key={index} style={styles.listItem}>
                 <TextInput
                   style={[styles.input, styles.stepInput]}
-                  placeholder={`Step ${idx + 1}`}
+                  placeholder={`Step ${index + 1}`}
                   multiline
                   textAlignVertical="top"
                   value={step}
                   onChangeText={v => {
                     const newSteps = [...form.steps];
-                    newSteps[idx] = v;
+                    newSteps[index] = v;
                     updateField("steps", newSteps);
                   }}
                 />
-                <TouchableOpacity onPress={() => removeStep(idx)} style={styles.removeBtn}>
+                <TouchableOpacity onPress={() => removeStep(index)} style={styles.removeBtn}>
                   <Text style={styles.removeText}>✕</Text>
                 </TouchableOpacity>
               </View>
@@ -233,12 +160,19 @@ const EditRecipeModal = ({
               value={form.image}
               onChangeText={v => updateField("image", v)}
             />
+
             <View style={styles.buttonRow}>
               <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.saveBtn} onPress={handleSubmit}>
-                <Text style={styles.saveText}>Save Changes</Text>
+              <TouchableOpacity
+                style={[styles.saveBtn, submitting && styles.saveBtnDisabled]}
+                onPress={handleSubmit}
+                disabled={submitting}
+              >
+                <Text style={[styles.saveText, submitting && styles.saveTextDisabled]}>
+                  Save Changes
+                </Text>
               </TouchableOpacity>
             </View>
           </KeyboardAwareScrollView>
@@ -269,7 +203,9 @@ const styles = StyleSheet.create({
   cancelBtn: { paddingHorizontal: 24, paddingVertical: 16, justifyContent: "center" },
   cancelText: { color: "#666", fontSize: 16, fontWeight: "600" },
   saveBtn: { backgroundColor: "#e74c3c", paddingHorizontal: 32, paddingVertical: 16, borderRadius: 12 },
+  saveBtnDisabled: { opacity: 0.5 },
   saveText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  saveTextDisabled: { opacity: 0.7 },
 });
 
 export default EditRecipeModal;
