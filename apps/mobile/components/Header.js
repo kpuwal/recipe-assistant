@@ -1,14 +1,8 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import chinchillaLogo from '../assets/cookbook-logo2.png';
-import { useFonts, PlayfairDisplay_400Regular, PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';
 
 const Header = () => {
-  const [fontsLoaded] = useFonts({
-    PlayfairRegular: PlayfairDisplay_400Regular,
-    PlayfairBold: PlayfairDisplay_700Bold,
-  });
-
   return (
     <View style={styles.header}>
       <View style={styles.logoContainer}>
@@ -32,8 +26,8 @@ const Header = () => {
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
-    paddingTop: 24,
-    paddingBottom: 10,
+    paddingTop: 28,
+    paddingBottom: 14,
     backgroundColor: "#ffffff",
     borderBottomWidth: 1,
     borderBottomColor: "#eee",

@@ -8,12 +8,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useFonts } from 'expo-font';
-import {
-  PlayfairDisplay_400Regular,
-  PlayfairDisplay_700Bold
-} from '@expo-google-fonts/playfair-display';
-
 import Header from "./components/Header";
 import TagFilters from "./components/TagFilters";
 import ChatMessages from "./components/ChatMessages";
@@ -30,11 +24,6 @@ import { useChat } from './hooks/useChat';
 import { API_URL, apiService } from './services/api';
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
-    PlayfairRegular: PlayfairDisplay_400Regular,
-    PlayfairBold: PlayfairDisplay_700Bold,
-  });
-
   const [showError, setShowError] = useState(false);
 
   const {
@@ -55,7 +44,6 @@ export default function App() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
-  const [showSplash, setShowSplash] = useState(true);
 
   const handleFavoriteChanged = useCallback((updatedRecipe) => {
     setSelectedRecipe(updatedRecipe);
