@@ -15,11 +15,7 @@ const CheatSheet = ({ onSync }) => {
     {
       icon: "search",
       title: "Normaal zoeken",
-      examples: [
-        "pasta",
-        "kip met rijst",
-        "onder 20 min",
-      ],
+      examples: ["pasta", "kip met rijst", "onder 20 min"],
     },
     {
       icon: "information-circle",
@@ -56,8 +52,6 @@ const CheatSheet = ({ onSync }) => {
 
   return (
     <View style={styles.container}>
-
-      {/* Tips */}
       <ScrollView
         style={styles.tipsList}
         contentContainerStyle={styles.tipsContent}
@@ -66,57 +60,37 @@ const CheatSheet = ({ onSync }) => {
       >
         {tips.map((tip, index) => (
           <View key={index} style={styles.tipRow}>
-
-            <Ionicons
-              name={tip.icon}
-              size={26}
-              color="#e74c3c"
-              style={styles.icon}
-            />
+            <Ionicons name={tip.icon} size={26} color="#e74c3c" style={styles.icon} />
 
             <View style={styles.tipContent}>
-              <Text style={styles.tipTitle}>
-                {tip.title}
-              </Text>
-
+              <Text style={styles.tipTitle}>{tip.title}</Text>
               {tip.examples.map((example, i) => (
                 <Text key={i} style={styles.example}>
                   • {example}
                 </Text>
               ))}
             </View>
-
           </View>
         ))}
+
+        {/* Sync button lives in the scrollable flow so it moves naturally
+            with the content when the keyboard compresses the view. */}
+        <TouchableOpacity
+          style={[styles.syncButton, syncing && styles.syncButtonDisabled]}
+          disabled={syncing}
+          onPress={handleSync}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name={syncing ? "hourglass-outline" : "sync-outline"}
+            size={22}
+            color="#fff"
+          />
+          <Text style={styles.syncButtonText}>
+            {syncing ? "Synchroniseren..." : "Recepten synchroniseren"}
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
-
-      {/* Sync button */}
-      <TouchableOpacity
-        style={[
-          styles.syncButton,
-          syncing && styles.syncButtonDisabled,
-        ]}
-        disabled={syncing}
-        onPress={handleSync}
-        activeOpacity={0.8}
-      >
-        <Ionicons
-          name={
-            syncing
-              ? "hourglass-outline"
-              : "sync-outline"
-          }
-          size={22}
-          color="#fff"
-        />
-
-        <Text style={styles.syncButtonText}>
-          {syncing
-            ? "Synchroniseren..."
-            : "Recepten synchroniseren"}
-        </Text>
-      </TouchableOpacity>
-
     </View>
   );
 };
@@ -127,58 +101,47 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#f8f9fa",
   },
-
   tipsList: {
     flex: 1,
   },
-
   tipsContent: {
-    paddingBottom: 10,
+    paddingBottom: 20,
   },
-
   tipRow: {
     flexDirection: "row",
     marginBottom: 24,
   },
-
   icon: {
     marginRight: 16,
     marginTop: 4,
   },
-
   tipContent: {
     flex: 1,
   },
-
   tipTitle: {
     fontSize: 18,
     fontWeight: "600",
     color: "#222",
     marginBottom: 2,
   },
-
   example: {
     fontSize: 15,
     color: "#555",
     marginVertical: 2,
   },
-
   syncButton: {
-    marginTop: 10,
+    marginTop: 20,
     backgroundColor: "#e74c3c",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 25,
-
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
-
   syncButtonDisabled: {
     opacity: 0.65,
   },
-
   syncButtonText: {
     color: "#fff",
     fontSize: 16,

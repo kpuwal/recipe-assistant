@@ -2,7 +2,6 @@
 import React, { useCallback, forwardRef } from 'react';
 import { View, FlatList, StyleSheet, Text, Image } from 'react-native';
 import RecipeCard from './RecipeCard';
-import CheatSheet from './CheatSheet';
 import chinchillaAvatar from '../assets/chinchilla_cook.jpg';
 
 
@@ -47,10 +46,6 @@ const ChatMessages = forwardRef(({
       ))}
     </View>
   ), [onShowRecipe, onDeleteRecipe, API_URL]);
-
-  if (chat.length === 0) {
-    return <CheatSheet onSync={onSync} />;
-  }
 
   return (
     <FlatList

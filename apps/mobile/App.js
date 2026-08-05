@@ -19,6 +19,7 @@ import TagFilters from "./components/TagFilters";
 import ChatMessages from "./components/ChatMessages";
 import InputArea from "./components/InputArea";
 import LoadingOverlay from "./components/LoadingOverlay"
+import CheatSheet from "./components/CheatSheet";
 
 import RecipeModal from "./modals/RecipeModal";
 import EditRecipeModal from "./modals/EditRecipeModal";
@@ -64,35 +65,35 @@ export default function App() {
     setSelectedRecipe(updatedRecipe);
   }, []);
 
-const syncRecipes = useCallback(async () => {
-  try {
-    const response = await apiService.syncRecipes();
-    const summary = response.data.summary;
-    setSyncResult(summary);
-  } catch (error) {
-    console.error("Sync error:", error);
-    Alert.alert(
-      "Sync fout",
-      error?.response?.data?.detail || "Kon recepten niet synchroniseren."
-    );
-  }
-}, []);
+  const syncRecipes = useCallback(async () => {
+    try {
+      const response = await apiService.syncRecipes();
+      const summary = response.data.summary;
+      setSyncResult(summary);
+    } catch (error) {
+      console.error("Sync error:", error);
+      Alert.alert(
+        "Sync fout",
+        error?.response?.data?.detail || "Kon recepten niet synchroniseren."
+      );
+    }
+  }, []);
 
-const showRecipe = useCallback(async (recipe) => {
-  if (recipe.source === "ai") {
-    setSelectedRecipe(recipe);
-    setModalVisible(true);
-    return;
-  }
-  try {
-    const response = await apiService.getRecipe(recipe.id, "nl");
-    setSelectedRecipe(response.data);
-    setModalVisible(true);
-  } catch (error) {
-    console.log(error);
-    Alert.alert("Fout", "Kon recept niet laden.");
-  }
-}, []);
+  const showRecipe = useCallback(async (recipe) => {
+    if (recipe.source === "ai") {
+      setSelectedRecipe(recipe);
+      setModalVisible(true);
+      return;
+    }
+    try {
+      const response = await apiService.getRecipe(recipe.id, "nl");
+      setSelectedRecipe(response.data);
+      setModalVisible(true);
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Fout", "Kon recept niet laden.");
+    }
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -107,44 +108,45 @@ const showRecipe = useCallback(async (recipe) => {
           onClear={clearAll}
         />
 
-        {/* Chat / CheatSheet occupies the remaining screen */}
-        <View style={styles.chatContainer}>
-          <ChatMessages
-            ref={chatListRef}
-            chat={chat}
-            onShowRecipe={showRecipe}
-            onDeleteRecipe={deleteRecipe}
-            API_URL={API_URL}
-            onSync={syncRecipes}
-          />
-        </View>
-
-        {/* Input sits independently above the keyboard */}
         <KeyboardAvoidingView
+          style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <InputArea
-            message={message}
-            setMessage={setMessage}
-            onSend={sendMessage}
-            isLoading={chatLoading}
-          />
+          <View style={{ flex: 1 }}>
+            {chat.length === 0 ? (
+              <CheatSheet onSync={syncRecipes} />
+            ) : (
+              <ChatMessages
+                ref={chatListRef}
+                chat={chat}
+                onShowRecipe={showRecipe}
+                onDeleteRecipe={deleteRecipe}
+                API_URL={API_URL}
+                onSync={syncRecipes}
+              />
+            )}
+            <InputArea
+              message={message}
+              setMessage={setMessage}
+              onSend={sendMessage}
+              isLoading={chatLoading}
+            />
+          </View>
         </KeyboardAvoidingView>
 
       </View>
 
-<RecipeModal
-  visible={modalVisible && !!selectedRecipe}
-  recipe={selectedRecipe}
-  language="nl"
-  onClose={() => {
+      <RecipeModal
+        visible={modalVisible && !!selectedRecipe}
+        recipe={selectedRecipe}
+        language="nl"
+        onClose={() => {
           setModalVisible(false);
           setTimeout(() => setSelectedRecipe(null), 300);
         }}
         onFavoriteChanged={handleFavoriteChanged}
         onEditPress={(recipeToEdit) => {
           setModalVisible(false);
-
           setTimeout(() => {
             setSelectedRecipe(recipeToEdit);
             setEditModalVisible(true);
