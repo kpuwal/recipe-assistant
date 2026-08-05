@@ -1,23 +1,25 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import chinchillaLogo from '../assets/cookbook-logo2.png';
+import { useFonts, PlayfairDisplay_400Regular, PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';
 
 const Header = () => {
+  const [fontsLoaded] = useFonts({
+    PlayfairRegular: PlayfairDisplay_400Regular,
+    PlayfairBold: PlayfairDisplay_700Bold,
+  });
+
   return (
     <View style={styles.header}>
       <View style={styles.logoContainer}>
-        <Image 
-          source={chinchillaLogo} 
-          style={styles.logoImage} 
-          resizeMode="contain" 
+        <Image
+          source={chinchillaLogo}
+          style={styles.logoImage}
+          resizeMode="contain"
         />
-
-        <View style={styles.logoTextContainer}>
-          <View style={styles.textBlock}>
-            <Text style={styles.logoText}>Chill Chinchilla</Text>
-            <Text style={styles.cookbookText}>Cookbook</Text>
-          </View>
-
+        <View style={styles.logoTextContainer} pointerEvents="none">
+          <Text style={styles.logoText}>Chill Chinchilla</Text>
+          <Text style={styles.cookbookText}>Cookbook</Text>
           <Text style={styles.subtitle}>
             Zoek op ingrediënten, categorie of kooktijd
           </Text>
@@ -29,8 +31,8 @@ const Header = () => {
 
 const styles = StyleSheet.create({
   header: {
-    paddingHorizontal: 12,
-    paddingTop: 12,
+    paddingHorizontal: 16,
+    paddingTop: 24,
     paddingBottom: 10,
     backgroundColor: "#ffffff",
     borderBottomWidth: 1,
@@ -38,41 +40,41 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
   },
   logoImage: {
-    width: 85,
-    height: 110,
+    width: 80,
+    height: 98,
     marginRight: 14,
-    borderRadius: 14,
+    borderRadius: 12,
   },
   logoTextContainer: {
     flex: 1,
     justifyContent: "center",
-    marginTop: 15,
-  },
-  textBlock: {
-    alignSelf: "flex-start",     // Important: shrinks to content width
   },
   logoText: {
     fontFamily: "PlayfairBold",
-    fontSize: 31,
+    fontSize: 29,
     color: "#1a1a1a",
-    marginBottom: 4,
+    lineHeight: 30,
+    includeFontPadding: false,
   },
   cookbookText: {
-    fontFamily: "PlayfairBold",
-    fontSize: 36,
-    color: "#1a1a1a",
-    alignSelf: "center",         // Now centers relative to "Chill Chinchilla"
-    marginTop: -10,
-    marginBottom: 8,
+    fontFamily: "PlayfairRegular",
+    fontSize: 20,
+    color: "#e74c3c",
+    lineHeight: 22,
+    letterSpacing: 0.3,
+    marginTop: -2,
+    marginBottom: 4,
+    includeFontPadding: false,
   },
   subtitle: {
-    fontSize: 14.5,
-    color: "#666",
-    lineHeight: 17,
-    marginTop: 4,
+    fontFamily: "PlayfairRegular",
+    fontSize: 14,
+    color: "#999",
+    lineHeight: 18,
+    includeFontPadding: false,
   },
 });
 
