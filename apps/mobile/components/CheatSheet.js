@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   syncButton: {
-    marginTop: 20,
+    marginTop: 0,
     backgroundColor: "#e74c3c",
     paddingVertical: 12,
     paddingHorizontal: 20,
