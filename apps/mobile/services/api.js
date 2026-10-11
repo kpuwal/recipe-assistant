@@ -24,6 +24,8 @@ const apiService = {
   toggleFavorite: (id) => api.put(`/recipes/${id}/favorite`),
   scaleRecipe: (id, persons) =>
     api.get(`/recipes/${id}/scale`, { params: { persons } }),
+  addTimer: (id, data) => api.post(`/recipes/${id}/timers`, data),
+  deleteTimer: (id, timerId) => api.delete(`/recipes/${id}/timers/${timerId}`),
   chat: (message, language) => api.post("/chat", { message, language }),
   syncRecipes: () => api.post("/ingestion/sync-recipes"),
 };

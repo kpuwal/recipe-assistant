@@ -5,7 +5,6 @@ const config = {
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
-  newArchEnabled: true,
 
   plugins: [
     [
@@ -38,8 +37,7 @@ const config = {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff"
     },
-    edgeToEdgeEnabled: true
-  },
+    },
 
   web: {
     favicon: "./assets/favicon.png"

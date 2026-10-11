@@ -9,6 +9,19 @@ class Ingredient(BaseModel):
     name: str
 
 
+class Timer(BaseModel):
+    id: str
+    label: str
+    duration_seconds: int
+    step_index: Optional[int] = None
+
+
+class TimerCreate(BaseModel):
+    label: str
+    duration_seconds: int
+    step_index: int
+
+
 class ChatRequest(BaseModel):
     message: str
     session_id: str = "default"
@@ -36,6 +49,8 @@ class Recipe(BaseModel):
 
     steps: List[str] = Field(default_factory=list)
     tips: Optional[str] = None
+
+    timers: List[Timer] = Field(default_factory=list)
 
     image: Optional[str] = None
     image_bytes: Optional[bytes] = None

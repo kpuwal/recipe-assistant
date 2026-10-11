@@ -1,6 +1,7 @@
 from typing import List, Optional
+from uuid import uuid4
 
-from models.models import Recipe
+from models.models import Recipe, Timer
 from repositories.recipe_repository import RecipeRepository
 from services.search_index import SearchIndex
 from utils.logger import logger
@@ -62,6 +63,30 @@ class RecipeService:
         recipe.is_favorite = not recipe.is_favorite
         saved = self.repo.save(recipe)
         logger.info("Toggled favorite for recipe %s -> %s", recipe_id, recipe.is_favorite)
+        return saved
+
+    def add_timer(self, recipe_id: str, timer_data: dict) -> Optional[Recipe]:
+        recipe = self.repo.get(recipe_id)
+        if not recipe:
+            return None
+        timer = Timer(id=str(uuid4()), **timer_data)
+        recipe.timers.append(timer)
+        saved = self.repo.save(recipe)
+        logger.info("Added timer to recipe %s: %s", recipe_id, timer.label)
+        return saved
+
+    def delete_timer(self, recipe_id: str, timer_id: str) -> Optional[Recipe]:
+        recipe = self.repo.get(recipe_id)
+        if not recipe:
+            return None
+
+        remaining = [t for t in recipe.timers if t.id != timer_id]
+        if len(remaining) == len(recipe.timers):
+            return None
+
+        recipe.timers = remaining
+        saved = self.repo.save(recipe)
+        logger.info("Deleted timer %s from recipe %s", timer_id, recipe_id)
         return saved
 
     def delete_recipe(self, recipe_id: str) -> bool:

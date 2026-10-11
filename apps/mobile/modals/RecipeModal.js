@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  TextInput,
 } from "react-native";
 import { Ionicons, Entypo, MaterialIcons } from "@expo/vector-icons";
 import apiService, { buildRecipeImageUrl } from "../services/api";
@@ -19,6 +20,12 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
   const [loading, setLoading] = useState(false);
   const [scaling, setScaling] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showTimerForm, setShowTimerForm] = useState(false);
+  const [timerStepIndex, setTimerStepIndex] = useState(null);
+  const [timerLabel, setTimerLabel] = useState("");
+  const [timerMinutes, setTimerMinutes] = useState("5");
+  const [savingTimer, setSavingTimer] = useState(false);
+  const [pendingDeleteTimerId, setPendingDeleteTimerId] = useState(null);
 
   useEffect(() => {
     if (recipe) {
@@ -111,6 +118,70 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
     }
   };
 
+  const openTimerForm = () => {
+    setPendingDeleteTimerId(null);
+    setTimerStepIndex(null);
+    setTimerLabel("");
+    setTimerMinutes("5");
+    setShowTimerForm(true);
+  };
+
+  const closeTimerForm = () => {
+    setShowTimerForm(false);
+  };
+
+  const selectTimerStep = (index) => {
+    setTimerStepIndex(index);
+  };
+
+  const handleSaveTimer = async () => {
+    const label = timerLabel.trim();
+    const minutes = parseInt(timerMinutes, 10);
+
+    if (timerStepIndex === null) {
+      Alert.alert("Fout", "Kies een stap voor de timer.");
+      return;
+    }
+    if (!label) {
+      Alert.alert("Fout", "Geef de timer een naam.");
+      return;
+    }
+    if (!Number.isFinite(minutes) || minutes <= 0) {
+      Alert.alert("Fout", "Vul een geldig aantal minuten in.");
+      return;
+    }
+
+    setSavingTimer(true);
+    try {
+      const response = await apiService.addTimer(recipe.id, {
+        label,
+        duration_seconds: minutes * 60,
+        step_index: timerStepIndex,
+      });
+      setDisplayRecipe(response.data);
+      setShowTimerForm(false);
+    } catch (error) {
+      console.error("Add timer error:", error);
+      Alert.alert("Fout", "Kon timer niet opslaan.");
+    } finally {
+      setSavingTimer(false);
+    }
+  };
+
+  const handleDeleteTimer = async (timerId) => {
+    setSavingTimer(true);
+    try {
+      const response = await apiService.deleteTimer(recipe.id, timerId);
+      setDisplayRecipe(response.data);
+      setPendingDeleteTimerId(null);
+    } catch (error) {
+      console.error("Delete timer error:", error);
+      Alert.alert("Fout", "Kon timer niet verwijderen.");
+    } finally {
+      setSavingTimer(false);
+    }
+  };
+
   if (!visible || !recipe) {
     return null;
   }
@@ -173,7 +244,11 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
           )}
         </View>
 
-        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Recipe Image */}
   {recipe.image && (
     <Image
@@ -242,12 +317,147 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
 
           {/* Steps */}
           <Text style={styles.sectionTitle}>Bereiding</Text>
-          {recipe.steps?.map((step, index) => (
-            <View key={index} style={styles.stepContainer}>
-              <Text style={styles.stepNumber}>{index + 1}</Text>
-              <Text style={styles.stepText}>{step}</Text>
+          {recipe.steps?.map((step, index) => {
+            const stepTimers = (displayRecipe?.timers || []).filter(
+              (timer) => timer.step_index === index
+            );
+
+            return (
+              <View key={index} style={styles.stepContainer}>
+                <Text style={styles.stepNumber}>{index + 1}</Text>
+                <View style={styles.stepContent}>
+                  <Text style={styles.stepText}>{step}</Text>
+
+                  {stepTimers.length > 0 && (
+                    <View style={styles.stepTimersRow}>
+                      {stepTimers.map((timer) => (
+                        <View key={timer.id} style={styles.timerChipGroup}>
+                          <TouchableOpacity
+                            style={styles.timerChip}
+                            activeOpacity={0.8}
+                            onLongPress={() =>
+                              setPendingDeleteTimerId(timer.id)
+                            }
+                            onPress={() => {
+                              if (pendingDeleteTimerId === timer.id) {
+                                setPendingDeleteTimerId(null);
+                              }
+                            }}
+                          >
+                            <Ionicons
+                              name="timer-outline"
+                              size={16}
+                              color="#e74c3c"
+                            />
+                            <Text style={styles.timerChipLabel}>
+                              {timer.label}
+                            </Text>
+                          </TouchableOpacity>
+
+                          {pendingDeleteTimerId === timer.id && (
+                            <TouchableOpacity
+                              style={styles.timerDeleteChip}
+                              onPress={() => handleDeleteTimer(timer.id)}
+                              disabled={savingTimer}
+                            >
+                              <Ionicons
+                                name="trash-outline"
+                                size={16}
+                                color="#fff"
+                              />
+                              <Text
+                                style={styles.timerDeleteChipText}
+                                numberOfLines={1}
+                              >
+                                Verwijderen
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              </View>
+            );
+          })}
+
+          {showTimerForm ? (
+            <View style={styles.timerForm}>
+              <Text style={styles.timerFormLabel}>Kies een stap</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.stepChips}
+              >
+                {displayRecipe?.steps?.map((step, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.stepChip,
+                      timerStepIndex === index && styles.stepChipSelected,
+                    ]}
+                    onPress={() => selectTimerStep(index)}
+                  >
+                    <Text
+                      style={[
+                        styles.stepChipText,
+                        timerStepIndex === index && styles.stepChipTextSelected,
+                      ]}
+                    >
+                      Stap {index + 1}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <Text style={styles.timerFormLabel}>Naam</Text>
+              <TextInput
+                style={styles.timerInput}
+                value={timerLabel}
+                onChangeText={setTimerLabel}
+                placeholder="bijv. koken"
+                placeholderTextColor="#999"
+              />
+
+              <Text style={styles.timerFormLabel}>Minuten</Text>
+              <TextInput
+                style={styles.timerInput}
+                value={timerMinutes}
+                onChangeText={setTimerMinutes}
+                keyboardType="number-pad"
+                placeholder="5"
+                placeholderTextColor="#999"
+              />
+
+              <View style={styles.timerFormButtons}>
+                <TouchableOpacity
+                  style={[styles.timerButton, styles.timerCancelButton]}
+                  onPress={closeTimerForm}
+                  disabled={savingTimer}
+                >
+                  <Text style={styles.timerCancelText}>Annuleren</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.timerButton, styles.timerSaveButton]}
+                  onPress={handleSaveTimer}
+                  disabled={savingTimer}
+                >
+                  <Text style={styles.timerSaveText}>
+                    {savingTimer ? "Opslaan..." : "Opslaan"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          ))}
+          ) : (
+            <TouchableOpacity
+              style={styles.addTimerButton}
+              onPress={openTimerForm}
+            >
+              <Ionicons name="add" size={20} color="#e74c3c" />
+              <Text style={styles.addTimerText}>Timer toevoegen</Text>
+            </TouchableOpacity>
+          )}
 
           {/* Tips */}
           {recipe.tips && recipe.tips.length > 0 && (
@@ -425,11 +635,66 @@ const styles = StyleSheet.create({
     width: 26,
   },
 
-  stepText: {
+  stepContent: {
     flex: 1,
+  },
+
+  stepText: {
     fontSize: 16,
     lineHeight: 24,
     color: "#333",
+  },
+
+  stepTimersRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+  },
+
+  timerChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "#fdecea",
+    borderWidth: 1,
+    borderColor: "#f5c6c0",
+  },
+
+  timerChipLabel: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#c0392b",
+  },
+
+  timerChipGroup: {
+    position: "relative",
+  },
+
+  timerDeleteChip: {
+    position: "absolute",
+    bottom: 38,
+    left: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 128,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "#e74c3c",
+    zIndex: 20,
+    elevation: 6,
+  },
+
+  timerDeleteChipText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#fff",
   },
 
   tipsContainer: {
@@ -451,6 +716,111 @@ const styles = StyleSheet.create({
   saveButton: {
     padding: 8,
     marginLeft: 8,
+  },
+
+  addTimerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    marginTop: 8,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#e74c3c",
+    borderStyle: "dashed",
+  },
+
+  addTimerText: {
+    marginLeft: 6,
+    color: "#e74c3c",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+
+  timerForm: {
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    marginTop: 8,
+    marginBottom: 20,
+    borderRadius: 12,
+    padding: 16,
+  },
+
+  timerFormLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#666",
+    marginTop: 12,
+    marginBottom: 6,
+  },
+
+  stepChips: {
+    flexDirection: "row",
+  },
+
+  stepChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: "#f0f0f0",
+    marginRight: 8,
+  },
+
+  stepChipSelected: {
+    backgroundColor: "#e74c3c",
+  },
+
+  stepChipText: {
+    color: "#555",
+    fontSize: 14,
+  },
+
+  stepChipTextSelected: {
+    color: "#fff",
+  },
+
+  timerInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: "#333",
+    backgroundColor: "#fafafa",
+  },
+
+  timerFormButtons: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 16,
+  },
+
+  timerButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginLeft: 10,
+  },
+
+  timerCancelButton: {
+    backgroundColor: "#f0f0f0",
+  },
+
+  timerCancelText: {
+    color: "#555",
+    fontWeight: "600",
+  },
+
+  timerSaveButton: {
+    backgroundColor: "#e74c3c",
+  },
+
+  timerSaveText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });
 

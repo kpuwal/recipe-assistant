@@ -9,6 +9,7 @@ from models.models import (
     Recipe,
     RecipeCreate,
     RecipeUpdate,
+    TimerCreate,
 )
 from utils.logger import logger
 
@@ -75,6 +76,36 @@ def toggle_favorite(
         logger.warning("Recipe not found for favorite toggle: %s", recipe_id)
         raise HTTPException(status_code=404, detail="Recipe not found")
     logger.info("Toggled favorite for recipe %s", recipe_id)
+    return recipe
+
+@router.post("/{recipe_id}/timers", response_model=Recipe)
+def add_timer(
+    recipe_id: str,
+    timer_data: TimerCreate,
+    service: RecipeService = Depends(get_recipe_service)
+):
+    recipe = service.add_timer(recipe_id, timer_data.model_dump())
+    if not recipe:
+        logger.warning("Recipe not found for timer creation: %s", recipe_id)
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    logger.info("Added timer to recipe %s", recipe_id)
+    return recipe
+
+@router.delete("/{recipe_id}/timers/{timer_id}", response_model=Recipe)
+def delete_timer(
+    recipe_id: str,
+    timer_id: str,
+    service: RecipeService = Depends(get_recipe_service)
+):
+    if not service.get_recipe(recipe_id):
+        logger.warning("Recipe not found for timer deletion: %s", recipe_id)
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    recipe = service.delete_timer(recipe_id, timer_id)
+    if not recipe:
+        logger.warning("Timer not found for deletion: %s", timer_id)
+        raise HTTPException(status_code=404, detail="Timer not found")
+    logger.info("Deleted timer %s from recipe %s", timer_id, recipe_id)
     return recipe
 
 @router.get("/{recipe_id}/scale")

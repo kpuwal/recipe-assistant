@@ -23,3 +23,4 @@ apps/mobile/.env.production
 apps/mobile/.env.development
 apps/mobile/eas.json
 apps/mobile/.gitignore
+apps/mobile/AGENTS.md
