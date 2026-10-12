@@ -12,6 +12,9 @@ import {
 } from "react-native";
 import { Ionicons, Entypo, MaterialIcons } from "@expo/vector-icons";
 import apiService, { buildRecipeImageUrl } from "../services/api";
+import { useTimers } from "../hooks/useTimers";
+import TimerOverlay from "../components/timers/TimerOverlay";
+import { TIMER_ICONS, TIMER_ICON_KEYS } from "../assets/icons";
 
 const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress, onRecipeSaved }) => {
   const [isFavorite, setIsFavorite] = useState(false);
@@ -24,8 +27,11 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
   const [timerStepIndex, setTimerStepIndex] = useState(null);
   const [timerLabel, setTimerLabel] = useState("");
   const [timerMinutes, setTimerMinutes] = useState("5");
+  const [timerIcon, setTimerIcon] = useState(null);
   const [savingTimer, setSavingTimer] = useState(false);
   const [pendingDeleteTimerId, setPendingDeleteTimerId] = useState(null);
+
+  const { startTimer } = useTimers();
 
   useEffect(() => {
     if (recipe) {
@@ -123,6 +129,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
     setTimerStepIndex(null);
     setTimerLabel("");
     setTimerMinutes("5");
+    setTimerIcon(null);
     setShowTimerForm(true);
   };
 
@@ -157,6 +164,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
         label,
         duration_seconds: minutes * 60,
         step_index: timerStepIndex,
+        icon: timerIcon,
       });
       setDisplayRecipe(response.data);
       setShowTimerForm(false);
@@ -165,6 +173,18 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
       Alert.alert("Fout", "Kon timer niet opslaan.");
     } finally {
       setSavingTimer(false);
+    }
+  };
+
+  const handleStartTimer = (timer) => {
+    const started = startTimer({
+      sourceId: timer.id,
+      label: timer.label,
+      durationSeconds: timer.duration_seconds,
+      icon: timer.icon,
+    });
+    if (!started) {
+      Alert.alert("Timer", "Deze timer loopt al.");
     }
   };
 
@@ -341,7 +361,9 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
                             onPress={() => {
                               if (pendingDeleteTimerId === timer.id) {
                                 setPendingDeleteTimerId(null);
+                                return;
                               }
+                              handleStartTimer(timer);
                             }}
                           >
                             <Ionicons
@@ -430,6 +452,39 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
                 placeholderTextColor="#999"
               />
 
+              <Text style={styles.timerFormLabel}>Icoon</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.iconPicker}
+              >
+                <TouchableOpacity
+                  style={[
+                    styles.iconOption,
+                    timerIcon === null && styles.iconOptionSelected,
+                  ]}
+                  onPress={() => setTimerIcon(null)}
+                >
+                  <Ionicons name="timer-outline" size={24} color="#e74c3c" />
+                </TouchableOpacity>
+                {TIMER_ICON_KEYS.map((key) => (
+                  <TouchableOpacity
+                    key={key}
+                    style={[
+                      styles.iconOption,
+                      timerIcon === key && styles.iconOptionSelected,
+                    ]}
+                    onPress={() => setTimerIcon(key)}
+                  >
+                    <Image
+                      source={TIMER_ICONS[key]}
+                      style={styles.iconOptionImage}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
               <View style={styles.timerFormButtons}>
                 <TouchableOpacity
                   style={[styles.timerButton, styles.timerCancelButton]}
@@ -470,6 +525,8 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
           )}
         </ScrollView>
       </View>
+
+      <TimerOverlay />
     </Modal>
   );
 };
@@ -790,6 +847,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     backgroundColor: "#fafafa",
+  },
+
+  iconPicker: {
+    flexDirection: "row",
+  },
+
+  iconOption: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fafafa",
+    borderWidth: 2,
+    borderColor: "#eee",
+    marginRight: 8,
+  },
+
+  iconOptionSelected: {
+    borderColor: "#e74c3c",
+    backgroundColor: "#fdecea",
+  },
+
+  iconOptionImage: {
+    width: 24,
+    height: 24,
   },
 
   timerFormButtons: {

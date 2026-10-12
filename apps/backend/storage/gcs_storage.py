@@ -57,12 +57,13 @@ class GCSStorage:
     def download_json(
         self,
         blob_name: str,
+        check_exists: bool = True,
     ) -> Optional[Dict]:
 
         try:
             blob = self.bucket.blob(blob_name)
 
-            if not blob.exists():
+            if check_exists and not blob.exists():
                 logger.warning("File not found: %s", blob_name)
                 return None
 

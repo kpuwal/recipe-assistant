@@ -5,39 +5,47 @@ import {
   Text,
   StyleSheet,
   Image,
+  Modal,
 } from "react-native";
 
 export default function LoadingOverlay({
   message = "Chinchilla denkt na...",
+  visible = true,
 }) {
   return (
-    <View style={styles.overlay}>
-      <View style={styles.card}>
-        <View style={styles.left}>
-          <View style={styles.loadingRow}>
-            <ActivityIndicator size="small" color="#E74C3C" />
+    <Modal
+      transparent
+      visible={visible}
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={() => {}}
+    >
+      <View style={styles.overlay}>
+        <View style={styles.card}>
+          <View style={styles.left}>
+            <View style={styles.loadingRow}>
+              <ActivityIndicator size="small" color="#E74C3C" />
+            </View>
+            <Text style={styles.text}>Chinchilla</Text>
+            <Text style={styles.text}>denkt na...</Text>
           </View>
-          <Text style={styles.text}>Chinchilla</Text>
-          <Text style={styles.text}>denkt na...</Text>
+          <Image
+            source={require("../assets/thinking.jpg")}
+            style={styles.image}
+            resizeMode="contain"
+          />
         </View>
-        <Image
-          source={require("../assets/thinking.jpg")}
-          style={styles.image}
-          resizeMode="contain"
-        />
       </View>
-    </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 9999,
-    elevation: 9999,
   },
 
   card: {

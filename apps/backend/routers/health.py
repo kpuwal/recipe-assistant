@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from core.dependencies import get_gcs_storage
+from core.dependencies import get_gcs_storage, get_recipe_repository
+from repositories.recipe_repository import RecipeRepository
 from storage.gcs_storage import GCSStorage
 from utils.logger import logger
 
@@ -14,6 +15,15 @@ def health_check():
         "status": "healthy",
         "service": "recipe-assistant",
     }
+
+
+@router.get("/warmup")
+def warmup(
+    repo: RecipeRepository = Depends(get_recipe_repository),
+):
+    recipes = repo.list()
+    logger.info("Warmup requested, %d recipes ready", len(recipes))
+    return {"status": "ready", "count": len(recipes)}
 
 
 @router.get("/healthz")

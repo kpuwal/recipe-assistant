@@ -1,5 +1,6 @@
 import threading
 import re
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
@@ -54,28 +55,32 @@ class RecipeRepository:
         next_number = max(numbers, default=0) + 1
         return f"{prefix}{next_number:03d}"
 
+    def _load_one(self, blob_name: str) -> Optional[Recipe]:
+        data = self.storage.download_json(blob_name, check_exists=False)
+        if not data:
+            return None
+
+        source = blob_name.split("/")[1]
+        data["source"] = source
+
+        recipe = Recipe(**data)
+        build_search_index(recipe)
+        return recipe
+
     def load_all(self) -> List[Recipe]:
-        recipes = []
+        files = [
+            blob_name
+            for blob_name in self.storage.list_files(prefix="recipes/")
+            if blob_name.endswith(".json")
+        ]
 
-        files = self.storage.list_files(prefix="recipes/")
+        if not files:
+            return []
 
-        for blob_name in files:
-            if not blob_name.endswith(".json"):
-                continue
+        with ThreadPoolExecutor(max_workers=16) as executor:
+            loaded = executor.map(self._load_one, files)
 
-            data = self.storage.download_json(blob_name)
-            if not data:
-                continue
-
-            parts = blob_name.split("/")
-            source = parts[1]
-            data["source"] = source
-
-            recipe = Recipe(**data)
-            build_search_index(recipe)
-            recipes.append(recipe)
-
-        return recipes
+        return [recipe for recipe in loaded if recipe is not None]
 
     def list(self) -> List[Recipe]:
         if self._cached_recipes is None or self._cached_index is None:

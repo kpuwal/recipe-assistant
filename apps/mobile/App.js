@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -7,6 +7,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as SplashScreen from "expo-splash-screen";
+import {
+  useFonts,
+  PlayfairDisplay_400Regular,
+  PlayfairDisplay_700Bold,
+} from "@expo-google-fonts/playfair-display";
 
 import Header from "./components/Header";
 import TagFilters from "./components/TagFilters";
@@ -22,9 +28,27 @@ import SyncResultModal from "./modals/SyncResultModal";
 
 import { useChat } from './hooks/useChat';
 import { API_URL, apiService } from './services/api';
+import TimerOverlay from './components/timers/TimerOverlay';
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function App() {
   const [showError, setShowError] = useState(false);
+
+  const [fontsLoaded, fontError] = useFonts({
+    PlayfairBold: PlayfairDisplay_700Bold,
+    PlayfairRegular: PlayfairDisplay_400Regular,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    apiService.warmup().catch(() => {});
+  }, []);
 
   const {
     message,
@@ -82,6 +106,10 @@ export default function App() {
       Alert.alert("Fout", "Kon recept niet laden.");
     }
   }, []);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -171,6 +199,8 @@ export default function App() {
       />
 
       {chatLoading && <LoadingOverlay />}
+
+      <TimerOverlay />
     </SafeAreaView>
   );
 }

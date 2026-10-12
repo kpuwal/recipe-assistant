@@ -14,12 +14,14 @@ class Timer(BaseModel):
     label: str
     duration_seconds: int
     step_index: Optional[int] = None
+    icon: Optional[str] = None
 
 
 class TimerCreate(BaseModel):
     label: str
     duration_seconds: int
     step_index: int
+    icon: Optional[str] = None
 
 
 class ChatRequest(BaseModel):

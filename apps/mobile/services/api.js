@@ -28,6 +28,7 @@ const apiService = {
   deleteTimer: (id, timerId) => api.delete(`/recipes/${id}/timers/${timerId}`),
   chat: (message, language) => api.post("/chat", { message, language }),
   syncRecipes: () => api.post("/ingestion/sync-recipes"),
+  warmup: () => api.get("/warmup"),
 };
 
 export default apiService;

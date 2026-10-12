@@ -1,3 +1,6 @@
+import threading
+import time
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +12,7 @@ load_dotenv()
 
 from utils.logger import logger
 from utils.exceptions import AppError
+from core.dependencies import get_recipe_repository
 from routers.health import router as health_router
 from routers.recipes import router as recipes_router
 from routers.chat import router as chat_router
@@ -16,9 +20,27 @@ from routers.ingestion import router as ingestion_router
 from routers.images import router as images_router
 
 
+def _warm_recipe_cache() -> None:
+    try:
+        started = time.time()
+        recipes = get_recipe_repository().list()
+        logger.info(
+            "Warmed recipe cache with %d recipes in %.2fs",
+            len(recipes),
+            time.time() - started,
+        )
+    except Exception as e:
+        logger.error("Recipe cache warmup failed: %s", e)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Recipe Assistant started")
+    threading.Thread(
+        target=_warm_recipe_cache,
+        name="recipe-cache-warmup",
+        daemon=True,
+    ).start()
     yield
     logger.info("Recipe Assistant stopped")
 
