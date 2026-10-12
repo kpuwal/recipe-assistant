@@ -11,17 +11,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
+import apiService from "../services/api";
 import useRecipeForm from "../hooks/useRecipeForm";
 
-const EditRecipeModal = ({ visible, recipe, api_url, onClose, onRecipeUpdated }) => {
+const EditRecipeModal = ({ visible, recipe, onClose, onRecipeUpdated }) => {
   const handleUpdate = useCallback(
     async recipeData => {
       if (!recipe?.id) return;
-      return axios.put(`${api_url}/recipes/${recipe.id}`, { ...recipeData, id: recipe.id });
+      return apiService.updateRecipe(recipe.id, { ...recipeData, id: recipe.id });
     },
-    [api_url, recipe?.id]
+    [recipe?.id]
   );
 
   const handleSuccess = useCallback(
@@ -34,7 +34,6 @@ const EditRecipeModal = ({ visible, recipe, api_url, onClose, onRecipeUpdated })
 
   const { form, submitting, handleSubmit, updateField, updateIngredient, addIngredient, removeIngredient, addStep, removeStep } =
     useRecipeForm({
-      api_url,
       initialValues: recipe,
       onSubmit: handleUpdate,
       onSuccess: handleSuccess,

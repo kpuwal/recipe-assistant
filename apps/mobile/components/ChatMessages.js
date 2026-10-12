@@ -1,5 +1,5 @@
 // components/ChatMessages.js
-import React, { useCallback, forwardRef } from 'react';
+import React, { useCallback, useMemo, forwardRef } from 'react';
 import { View, FlatList, StyleSheet, Text, Image } from 'react-native';
 import RecipeCard from './RecipeCard';
 import chinchillaAvatar from '../assets/chinchilla_cook.jpg';
@@ -13,45 +13,66 @@ const ChatMessages = forwardRef(({
   onSync 
 }, ref) => {
 
-  const renderItem = useCallback(({ item }) => (
-    <View style={styles.messageContainer}>
-      {/* User Message - Right aligned */}
-      <View style={styles.userMessage}>
-        <View style={styles.userBubble}>
-          <Text style={styles.userBubbleText}>{item.user}</Text>
+  const listData = useMemo(() => {
+    const rows = [];
+    for (const msg of chat) {
+      rows.push({ type: 'message', key: `msg-${msg.id}`, message: msg });
+      (msg.recipes || []).forEach((recipe, index) => {
+        rows.push({
+          type: 'recipe',
+          key: `recipe-${msg.id}-${recipe.id ?? index}`,
+          recipe,
+        });
+      });
+    }
+    return rows;
+  }, [chat]);
+
+  const renderItem = useCallback(({ item }) => {
+    if (item.type === 'recipe') {
+      return (
+        <View style={styles.recipeRow}>
+          <RecipeCard
+            recipe={item.recipe}
+            onPress={onShowRecipe}
+            onDelete={onDeleteRecipe}
+            API_URL={API_URL}
+          />
+        </View>
+      );
+    }
+
+    const { message } = item;
+    return (
+      <View style={styles.messageContainer}>
+        {/* User Message - Right aligned */}
+        <View style={styles.userMessage}>
+          <View style={styles.userBubble}>
+            <Text style={styles.userBubbleText}>{message.user}</Text>
+          </View>
+        </View>
+
+        {/* Bot Message - Avatar + Bubble */}
+        <View style={styles.botMessage}>
+          <Image 
+            source={chinchillaAvatar} 
+            style={styles.botAvatar}
+            resizeMode="cover"
+          />
+          
+          <View style={styles.botBubble}>
+            <Text style={styles.botBubbleText}>{message.bot}</Text>
+          </View>
         </View>
       </View>
-
-      {/* Bot Message - Avatar + Bubble */}
-      <View style={styles.botMessage}>
-        <Image 
-          source={chinchillaAvatar} 
-          style={styles.botAvatar}
-          resizeMode="cover"
-        />
-        
-        <View style={styles.botBubble}>
-          <Text style={styles.botBubbleText}>{item.bot}</Text>
-        </View>
-      </View>
-
-      {item.recipes?.map((recipe) => (
-        <RecipeCard 
-          key={recipe.id} 
-          recipe={recipe} 
-          onPress={onShowRecipe}
-          onDelete={onDeleteRecipe}
-          API_URL={API_URL}
-        />
-      ))}
-    </View>
-  ), [onShowRecipe, onDeleteRecipe, API_URL]);
+    );
+  }, [onShowRecipe, onDeleteRecipe, API_URL]);
 
   return (
     <FlatList
       ref={ref}
-      data={chat}
-      keyExtractor={(item, index) => `chat-${index}`}
+      data={listData}
+      keyExtractor={(item) => item.key}
       renderItem={renderItem}
       style={styles.chatList}
       contentContainerStyle={{
@@ -59,7 +80,7 @@ const ChatMessages = forwardRef(({
         paddingBottom: 40,
       }}
       removeClippedSubviews={true}
-      initialNumToRender={6}
+      initialNumToRender={8}
       maxToRenderPerBatch={10}
       windowSize={15}
       keyboardShouldPersistTaps="handled"
@@ -70,6 +91,10 @@ const ChatMessages = forwardRef(({
 const styles = StyleSheet.create({
   messageContainer: {
     marginVertical: 8,
+    paddingHorizontal: 12,
+  },
+
+  recipeRow: {
     paddingHorizontal: 12,
   },
 

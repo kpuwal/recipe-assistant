@@ -11,17 +11,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
+import apiService from "../services/api";
 import useRecipeForm from "../hooks/useRecipeForm";
 
-const AddRecipeModal = ({ visible, onClose, api_url, onRecipeAdded }) => {
-  const handleCreate = useCallback(
-    async recipeData => {
-      return axios.post(`${api_url}/recipes/`, recipeData);
-    },
-    [api_url]
-  );
+const AddRecipeModal = ({ visible, onClose, onRecipeAdded }) => {
+  const handleCreate = useCallback(async recipeData => {
+    return apiService.createRecipe(recipeData);
+  }, []);
 
   const {
     form,

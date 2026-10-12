@@ -77,12 +77,13 @@ class GCSStorage:
     def download_bytes(
         self,
         blob_name: str,
+        check_exists: bool = True,
     ) -> bytes | None:
 
         try:
             blob = self.bucket.blob(blob_name)
 
-            if not blob.exists():
+            if check_exists and not blob.exists():
                 logger.warning("Blob not found: %s", blob_name)
                 return None
 

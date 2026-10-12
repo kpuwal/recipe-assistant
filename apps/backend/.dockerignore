@@ -1,0 +1,36 @@
+# Secrets — must never enter the image layer
+.env
+.env.*
+keys/
+*.pem
+*.key
+
+# Python build/runtime noise
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Not needed at runtime
+tests/
+debug/
+.git/
+.gitignore
+.github/
+.vscode/
+.idea/
+
+# Only these are needed; keep core/groq_prompt.txt and docker-entrypoint.sh
+README.txt
+
+# Lockfiles / tooling not used by the image build
+uv.lock
+pyproject.toml
+compose.yaml
+compose.yml
+Dockerfile
+.dockerignore

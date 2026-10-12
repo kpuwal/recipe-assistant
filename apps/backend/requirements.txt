@@ -6,6 +6,7 @@ groq
 pydantic
 dropbox
 pymupdf
+Pillow
 pytest
 pytest-asyncio
 httpx

@@ -173,7 +173,6 @@ export default function App() {
       <EditRecipeModal
         visible={editModalVisible && !!selectedRecipe}
         recipe={selectedRecipe}
-        api_url={API_URL}
         onClose={() => {
           setEditModalVisible(false);
           setTimeout(() => setSelectedRecipe(null), 300);
@@ -184,7 +183,6 @@ export default function App() {
       <AddRecipeModal
         visible={addModalVisible}
         onClose={() => setAddModalVisible(false)}
-        api_url={API_URL}
         onRecipeAdded={() => {
           Alert.alert(
             "Succes",

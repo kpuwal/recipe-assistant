@@ -6,10 +6,10 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Image,
   Alert,
   TextInput,
 } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons, Entypo, MaterialIcons } from "@expo/vector-icons";
 import apiService, { buildRecipeImageUrl } from "../services/api";
 import { useTimers } from "../hooks/useTimers";
@@ -272,9 +272,11 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
           {/* Recipe Image */}
   {recipe.image && (
     <Image
-      source={{ uri: buildRecipeImageUrl(recipe.source, recipe.image) }}
+      source={buildRecipeImageUrl(recipe.source, recipe.image)}
       style={styles.recipeImage}
-      resizeMode="cover"
+      contentFit="cover"
+      cachePolicy="memory-disk"
+      transition={200}
     />
   )}
 
@@ -479,7 +481,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
                     <Image
                       source={TIMER_ICONS[key]}
                       style={styles.iconOptionImage}
-                      resizeMode="contain"
+                      contentFit="contain"
                     />
                   </TouchableOpacity>
                 ))}

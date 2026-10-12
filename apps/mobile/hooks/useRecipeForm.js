@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Alert } from "react-native";
-import axios from "axios";
 
 const INITIAL_FORM = {
   title: "",
@@ -13,7 +12,7 @@ const INITIAL_FORM = {
   image: "",
 };
 
-const useRecipeForm = ({ api_url, onSubmit, onSuccess, initialValues = null }) => {
+const useRecipeForm = ({ onSubmit, onSuccess, initialValues = null }) => {
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
 

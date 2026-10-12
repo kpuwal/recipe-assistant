@@ -1,14 +1,35 @@
 import axios from "axios";
 
 export const API_URL = process.env.EXPO_PUBLIC_API_URL?.trim();
+export const API_KEY = process.env.EXPO_PUBLIC_APP_API_KEY?.trim();
+
+const AUTH_HEADERS = API_KEY ? { "X-Api-Key": API_KEY } : {};
+
+if (!API_URL) {
+  console.error(
+    "[api] EXPO_PUBLIC_API_URL is not set. Every request will fail. " +
+      "Set it in .env / .env.production before building."
+  );
+}
+
+if (!API_KEY) {
+  console.error(
+    "[api] EXPO_PUBLIC_APP_API_KEY is not set. Every request will 401. " +
+      "It must match APP_API_KEY on the backend."
+  );
+}
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 15000,
+  headers: { ...AUTH_HEADERS },
 });
 
-export const buildRecipeImageUrl = (source, image) => {
+export const buildRecipeImageUrl = (source, image, width) => {
   if (!image || !API_URL) return null;
-  return `${API_URL}/images/${source}/${image}`;
+  const base = `${API_URL}/images/${source}/${image}`;
+  const uri = width ? `${base}?w=${width}` : base;
+  return { uri, headers: { ...AUTH_HEADERS } };
 };
 
 const apiService = {

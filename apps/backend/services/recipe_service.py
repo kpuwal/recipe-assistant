@@ -61,7 +61,7 @@ class RecipeService:
         if not recipe:
             return None
         recipe.is_favorite = not recipe.is_favorite
-        saved = self.repo.save(recipe)
+        saved = self.repo.save(recipe, clear_cache=False)
         logger.info("Toggled favorite for recipe %s -> %s", recipe_id, recipe.is_favorite)
         return saved
 
@@ -71,7 +71,7 @@ class RecipeService:
             return None
         timer = Timer(id=str(uuid4()), **timer_data)
         recipe.timers.append(timer)
-        saved = self.repo.save(recipe)
+        saved = self.repo.save(recipe, clear_cache=False)
         logger.info("Added timer to recipe %s: %s", recipe_id, timer.label)
         return saved
 
@@ -85,7 +85,7 @@ class RecipeService:
             return None
 
         recipe.timers = remaining
-        saved = self.repo.save(recipe)
+        saved = self.repo.save(recipe, clear_cache=False)
         logger.info("Deleted timer %s from recipe %s", timer_id, recipe_id)
         return saved
 

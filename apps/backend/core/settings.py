@@ -21,5 +21,10 @@ class Settings:
             "http://localhost:19006,http://127.0.0.1:19006"
         ).split(",")
 
+        # Shared secret required on every non-health endpoint. There is no
+        # default: main.py refuses to boot when this is empty so that a
+        # misconfigured deploy fails loudly instead of serving publicly.
+        self.api_key = os.getenv("APP_API_KEY", "").strip()
+
 
 settings = Settings()

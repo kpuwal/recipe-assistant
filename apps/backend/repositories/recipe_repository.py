@@ -7,6 +7,7 @@ from typing import List, Optional
 
 from storage.gcs_storage import GCSStorage
 from models.models import Recipe
+from services.image_service import downscale_image, media_type_for
 from services.search_index import build_search_index, SearchIndexBuilder, SearchIndex
 from core.helpers import slugify
 from utils.logger import logger
@@ -127,7 +128,7 @@ class RecipeRepository:
 
         return None
 
-    def save(self, recipe: Recipe) -> Recipe:
+    def save(self, recipe: Recipe, clear_cache: bool = True) -> Recipe:
         with self._lock:
             recipe.source = self._map_source(recipe.source or "personal")
 
@@ -144,11 +145,20 @@ class RecipeRepository:
                 recipe.created_at = datetime.now()
 
             if recipe.image_bytes and recipe.image:
+                original_bytes = recipe.image_bytes
+                downscaled = downscale_image(original_bytes)
+
+                if downscaled is not None and len(downscaled) < len(original_bytes):
+                    recipe.image_bytes = downscaled
+                    recipe.image = f"{Path(recipe.image).stem}.jpg"
+                    recipe.image_extension = "jpg"
+
                 image_blob = (f"images/" f"{recipe.source}/" f"{recipe.image}")
 
                 uploaded_image = self.storage.upload_bytes(
                     data=recipe.image_bytes,
                     blob_name=image_blob,
+                    content_type=media_type_for(recipe.image),
                 )
 
                 if not uploaded_image:
@@ -164,7 +174,8 @@ class RecipeRepository:
             recipe.image_bytes = None
             recipe.image_extension = None
 
-            self._clear_cache()
+            if clear_cache:
+                self._clear_cache()
             logger.info( "Saved recipe to GCS: %s (source=%s)", recipe.id, recipe.source)
             return recipe
 

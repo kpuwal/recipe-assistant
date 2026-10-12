@@ -1,14 +1,15 @@
 // components/RecipeCard.js
 import React, { useMemo, memo } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { buildRecipeImageUrl } from '../services/api';
 
 const RecipeCard = memo(({ recipe, onPress, onDelete, API_URL }) => {
-  const imageUri = useMemo(() => buildRecipeImageUrl(recipe.source, recipe.image), [
-    recipe.source,
-    recipe.image,
-  ]);
+  const imageUri = useMemo(
+    () => buildRecipeImageUrl(recipe.source, recipe.image, 300),
+    [recipe.source, recipe.image]
+  );
 
   const handleDelete = (e) => {
     e.stopPropagation();
@@ -23,9 +24,12 @@ const RecipeCard = memo(({ recipe, onPress, onDelete, API_URL }) => {
     >
       {imageUri ? (
         <Image
-          source={{ uri: imageUri }}
+          source={imageUri}
           style={styles.recipeThumbnail}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={imageUri.uri}
+          transition={150}
         />
       ) : (
         <View style={styles.placeholderImage}>

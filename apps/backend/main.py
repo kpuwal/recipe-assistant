@@ -1,15 +1,20 @@
 import threading
 import time
 
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-from core.settings import settings
 
+# Must run before core.settings is imported: Settings is built at import time
+# and would otherwise read a half-populated environment.
 load_dotenv()
 
+from fastapi import Depends, FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from core.settings import settings
+
+from core.auth import require_api_key
 from utils.logger import logger
 from utils.exceptions import AppError
 from core.dependencies import get_recipe_repository
@@ -35,6 +40,13 @@ def _warm_recipe_cache() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if not settings.api_key:
+        raise RuntimeError(
+            "APP_API_KEY is not set. Refusing to start, because an API "
+            "without a key would be readable and writable by anyone who "
+            "knows the URL. Set APP_API_KEY in the environment."
+        )
+
     logger.info("Recipe Assistant started")
     threading.Thread(
         target=_warm_recipe_cache,
@@ -60,6 +72,8 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 
 @app.exception_handler(AppError)
 async def app_error_handler(request: Request, exc: AppError):
@@ -70,10 +84,15 @@ async def app_error_handler(request: Request, exc: AppError):
 
 
 app.include_router(health_router)
-app.include_router(recipes_router)
-app.include_router(chat_router)
-app.include_router(ingestion_router)
-app.include_router(images_router)
+
+# Everything else requires the shared API key. /health and /healthz stay open
+# because Cloud Run probes them; /warmup is gated since it forces a full
+# reload of every recipe from GCS and is a cheap DoS lever otherwise.
+protected = [Depends(require_api_key)]
+app.include_router(recipes_router, dependencies=protected)
+app.include_router(chat_router, dependencies=protected)
+app.include_router(ingestion_router, dependencies=protected)
+app.include_router(images_router, dependencies=protected)
 
 
 if __name__ == "__main__":

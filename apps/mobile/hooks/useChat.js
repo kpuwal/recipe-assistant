@@ -3,6 +3,9 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Keyboard, Alert } from "react-native";
 import apiService from "../services/api";
 
+let messageIdCounter = 0;
+const nextMessageId = () => `msg-${Date.now()}-${messageIdCounter++}`;
+
 export const useChat = (language = "nl") => {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
@@ -39,6 +42,7 @@ export const useChat = (language = "nl") => {
 
         setChat((prev) => [
           {
+            id: nextMessageId(),
             user: `Snelzoeken: ${tag.label}`,
             bot: `${response.data.length || 0} favoriete recepten gevonden.`,
             recipes: response.data || [],
@@ -51,6 +55,7 @@ export const useChat = (language = "nl") => {
 
         setChat((prev) => [
           {
+            id: nextMessageId(),
             user: `Snelzoeken: ${tag.label}`,
             bot: recipeCount > 0
               ? `${recipeCount} recepten gevonden.`
@@ -78,6 +83,7 @@ export const useChat = (language = "nl") => {
 
       setChat((prev) => [
         {
+          id: nextMessageId(),
           user: message,
           bot: response.data.answer,
           recipes: response.data.recipes || [],
