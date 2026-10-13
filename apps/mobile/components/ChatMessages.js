@@ -76,7 +76,7 @@ const ChatMessages = forwardRef(({
       renderItem={renderItem}
       style={styles.chatList}
       contentContainerStyle={{
-        paddingTop: 20,
+        paddingTop: 0,
         paddingBottom: 40,
       }}
       removeClippedSubviews={true}
@@ -90,7 +90,7 @@ const ChatMessages = forwardRef(({
 
 const styles = StyleSheet.create({
   messageContainer: {
-    marginVertical: 8,
+    marginVertical: 3,
     paddingHorizontal: 12,
   },
 

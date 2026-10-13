@@ -26,8 +26,8 @@ const Header = () => {
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 14,
+    paddingTop: 8,
+    paddingBottom: 0,
     backgroundColor: "#ffffff",
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
@@ -37,10 +37,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logoImage: {
-    width: 80,
-    height: 98,
-    marginRight: 14,
-    borderRadius: 12,
+    width: 88,
+    height: 102,
+    marginRight: 12,
+    borderRadius: 10,
   },
   logoTextContainer: {
     flex: 1,
@@ -48,26 +48,26 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontFamily: "PlayfairBold",
-    fontSize: 29,
+    fontSize: 30,
     color: "#1a1a1a",
-    lineHeight: 30,
+    lineHeight: 31,
     includeFontPadding: false,
   },
   cookbookText: {
     fontFamily: "PlayfairRegular",
-    fontSize: 20,
+    fontSize: 21,
     color: "#e74c3c",
     lineHeight: 22,
     letterSpacing: 0.3,
-    marginTop: -2,
-    marginBottom: 4,
+    marginTop: 0,
+    marginBottom: 0,
     includeFontPadding: false,
   },
   subtitle: {
     fontFamily: "PlayfairRegular",
     fontSize: 14,
     color: "#999",
-    lineHeight: 18,
+    lineHeight: 16,
     includeFontPadding: false,
   },
 });

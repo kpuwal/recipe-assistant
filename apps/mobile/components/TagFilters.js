@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { TAGS } from '../constants/tags';
 
-const TagFilters = ({ activeTag, onTagPress, onAddRecipe, onClear }) => {
+const TagFilters = ({ activeTag, onTagPress, onAddRecipe }) => {
   return (
     <ScrollView 
       horizontal 
@@ -30,9 +30,6 @@ const TagFilters = ({ activeTag, onTagPress, onAddRecipe, onClear }) => {
         </TouchableOpacity>
       ))}
 
-      <TouchableOpacity style={styles.clearButton} onPress={onClear}>
-        <Text style={styles.clearText}>✕ Clear</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -47,8 +44,6 @@ const styles = StyleSheet.create({
   tagTextActive: { color: "#fff" },
   addRecipeButton: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: "#e74c3c", borderRadius: 999, marginRight: 8, minHeight: 38, justifyContent: "center", alignItems: "center" },
   addRecipeButtonText: { color: "#fff", fontWeight: "600" },
-  clearButton: { paddingHorizontal: 14, paddingVertical: 7, backgroundColor: "#fee2e2", borderRadius: 999, borderWidth: 1, borderColor: "#fca5a5", marginLeft: 4, minHeight: 38, justifyContent: "center", alignItems: "center" },
-  clearText: { fontSize: 15, fontWeight: "600", color: "#ef4444", textAlign: "center", lineHeight: 18 },
 });
 
 export default TagFilters;

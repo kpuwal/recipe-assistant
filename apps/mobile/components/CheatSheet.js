@@ -4,13 +4,10 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const CheatSheet = ({ onSync }) => {
-  const [syncing, setSyncing] = React.useState(false);
-
+const CheatSheet = () => {
   const tips = [
     {
       icon: "search",
@@ -37,19 +34,6 @@ const CheatSheet = ({ onSync }) => {
     },
   ];
 
-  const handleSync = async () => {
-    if (syncing) return;
-
-    try {
-      setSyncing(true);
-      await onSync();
-    } catch (error) {
-      console.error("Sync error:", error);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
   return (
     <View style={styles.container}>
       <ScrollView
@@ -72,24 +56,6 @@ const CheatSheet = ({ onSync }) => {
             </View>
           </View>
         ))}
-
-        {/* Sync button lives in the scrollable flow so it moves naturally
-            with the content when the keyboard compresses the view. */}
-        <TouchableOpacity
-          style={[styles.syncButton, syncing && styles.syncButtonDisabled]}
-          disabled={syncing}
-          onPress={handleSync}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name={syncing ? "hourglass-outline" : "sync-outline"}
-            size={22}
-            color="#fff"
-          />
-          <Text style={styles.syncButtonText}>
-            {syncing ? "Synchroniseren..." : "Recepten synchroniseren"}
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -128,25 +94,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#555",
     marginVertical: 2,
-  },
-  syncButton: {
-    marginTop: 0,
-    backgroundColor: "#e74c3c",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  syncButtonDisabled: {
-    opacity: 0.65,
-  },
-  syncButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 8,
   },
 });
 

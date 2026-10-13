@@ -15,6 +15,7 @@ import {
 } from "@expo-google-fonts/playfair-display";
 
 import Header from "./components/Header";
+import ActionBar from "./components/ActionBar";
 import TagFilters from "./components/TagFilters";
 import ChatMessages from "./components/ChatMessages";
 import InputArea from "./components/InputArea";
@@ -117,11 +118,12 @@ export default function App() {
 
         <Header />
 
+        <ActionBar onClear={clearAll} onSync={syncRecipes} />
+
         <TagFilters
           activeTag={activeTag}
           onTagPress={searchByTag}
           onAddRecipe={() => setAddModalVisible(true)}
-          onClear={clearAll}
         />
 
         <KeyboardAvoidingView
@@ -130,7 +132,7 @@ export default function App() {
         >
           <View style={{ flex: 1 }}>
             {chat.length === 0 ? (
-              <CheatSheet onSync={syncRecipes} />
+              <CheatSheet />
             ) : (
               <ChatMessages
                 ref={chatListRef}
