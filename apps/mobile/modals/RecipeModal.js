@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -32,6 +32,18 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
   const [pendingDeleteTimerId, setPendingDeleteTimerId] = useState(null);
 
   const { startTimer } = useTimers();
+
+  const scrollViewRef = useRef(null);
+  const timerFormY = useRef(0);
+
+  const scrollToTimerForm = useCallback(() => {
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollTo({
+        y: Math.max(0, timerFormY.current - 12),
+        animated: true,
+      });
+    });
+  }, []);
 
   useEffect(() => {
     if (recipe) {
@@ -265,9 +277,12 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
         </View>
 
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets={true}
+          keyboardDismissMode="interactive"
         >
           {/* Recipe Image */}
   {recipe.image && (
@@ -407,7 +422,12 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
           })}
 
           {showTimerForm ? (
-            <View style={styles.timerForm}>
+            <View
+              style={styles.timerForm}
+              onLayout={(e) => {
+                timerFormY.current = e.nativeEvent.layout.y;
+              }}
+            >
               <Text style={styles.timerFormLabel}>Kies een stap</Text>
               <ScrollView
                 horizontal
@@ -440,6 +460,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
                 style={styles.timerInput}
                 value={timerLabel}
                 onChangeText={setTimerLabel}
+                onFocus={scrollToTimerForm}
                 placeholder="bijv. koken"
                 placeholderTextColor="#999"
               />
@@ -449,6 +470,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
                 style={styles.timerInput}
                 value={timerMinutes}
                 onChangeText={setTimerMinutes}
+                onFocus={scrollToTimerForm}
                 keyboardType="number-pad"
                 placeholder="5"
                 placeholderTextColor="#999"
