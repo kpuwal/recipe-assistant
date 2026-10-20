@@ -4,12 +4,35 @@ from utils.logger import logger
 from services.pdf_parser import parse_pdf_bytes
 
 
+PRESERVED_ON_RESYNC = (
+    "is_favorite",
+    "cooked_dates",
+    "timers",
+    "created_at",
+    "category",
+)
+
+
 class PDFIngestionPipeline:
 
     def __init__(self, source, repository, state):
         self.source = source
         self.repository = repository
         self.state = state
+
+    def _merge_existing(self, parsed, existing):
+        for field in PRESERVED_ON_RESYNC:
+            setattr(parsed, field, getattr(existing, field))
+
+        logger.info(
+            "Preserved user data on resync for %s (favorite=%s, cooked=%d, timers=%d, category=%s)",
+            parsed.id,
+            parsed.is_favorite,
+            len(parsed.cooked_dates or []),
+            len(parsed.timers or []),
+            parsed.category,
+        )
+        return parsed
 
     def _process_file(self, file, index: int, dry_run: bool = False):
         file_hash = file.content_hash
@@ -28,6 +51,10 @@ class PDFIngestionPipeline:
 
         try:
             recipe = parse_pdf_bytes(pdf_bytes=pdf_bytes, recipe_id=recipe_id)
+
+            existing = self.repository.get(recipe_id) if existing_recipe_id else None
+            if existing:
+                recipe = self._merge_existing(recipe, existing)
 
             if not dry_run:
                 self.repository.save(recipe)

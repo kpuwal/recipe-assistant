@@ -56,11 +56,11 @@ export default function App() {
     message,
     setMessage,
     chat,
-    activeTag,
+    activeFilter,
     isLoading: chatLoading,
     chatListRef,
     clearAll,
-    searchByTag,
+    applyFilter,
     sendMessage,
     deleteRecipe,
   } = useChat("nl");
@@ -140,8 +140,8 @@ export default function App() {
         />
 
         <TagFilters
-          activeTag={activeTag}
-          onTagPress={searchByTag}
+          activeFilter={activeFilter}
+          onFilterPress={applyFilter}
           onAddRecipe={() => setAddModalVisible(true)}
         />
 

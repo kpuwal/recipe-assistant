@@ -19,10 +19,18 @@ router = APIRouter(prefix="/recipes", tags=["recipes"])
 def list_recipes(
     source: Optional[str] = Query(None),
     favorites_only: bool = Query(False),
+    category: Optional[str] = Query(None),
     service: RecipeService = Depends(get_recipe_service)
 ):
-    recipes = service.list_recipes(source=source, favorites_only=favorites_only)
-    logger.info("Listed %d recipes (source=%s, favorites=%s)", len(recipes), source, favorites_only)
+    recipes = service.list_recipes(
+        source=source,
+        favorites_only=favorites_only,
+        category=category,
+    )
+    logger.info(
+        "Listed %d recipes (source=%s, favorites=%s, category=%s)",
+        len(recipes), source, favorites_only, category,
+    )
     return recipes
 
 @router.get("/search")
@@ -30,10 +38,19 @@ def search_recipes(
     q: str | None = None,
     ingredient: str | None = None,
     max_time: int | None = None,
+    min_time: int | None = None,
+    category: str | None = None,
+    favorites_only: bool = False,
     search_service: SearchService = Depends(get_search_service)
 ):
     query = q or ingredient or ""
-    recipes = search_service.search_recipes(query=query, max_time=max_time)
+    recipes = search_service.search_recipes(
+        query=query,
+        max_time=max_time,
+        min_time=min_time,
+        category=category,
+        favorites_only=favorites_only,
+    )
     logger.info("Search for '%s' returned %d recipes", query, len(recipes))
     return recipes
 

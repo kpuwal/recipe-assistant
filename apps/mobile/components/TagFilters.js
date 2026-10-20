@@ -1,8 +1,8 @@
 import React from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { TAGS } from '../constants/tags';
+import { FILTERS } from '../constants/filters';
 
-const TagFilters = ({ activeTag, onTagPress, onAddRecipe }) => {
+const TagFilters = ({ activeFilter, onFilterPress, onAddRecipe }) => {
   return (
     <ScrollView 
       horizontal 
@@ -14,23 +14,23 @@ const TagFilters = ({ activeTag, onTagPress, onAddRecipe }) => {
         <Text style={styles.addRecipeButtonText}>+ Nieuw Recept</Text>
       </TouchableOpacity>
 
-      {TAGS.map((tag) => (
+      {FILTERS.map((filter) => (
         <TouchableOpacity 
-          key={tag.label} 
+          key={filter.id} 
           style={[
             styles.tagButton, 
-            activeTag === tag.label && styles.tagButtonActive
+            activeFilter === filter.id && styles.tagButtonActive
           ]} 
-          onPress={() => onTagPress(tag)}
+          onPress={() => onFilterPress(filter)}
         >
-          <Text style={styles.tagEmoji}>{tag.label.split(' ')[0]}</Text>
+          <Text style={styles.tagEmoji}>{filter.emoji}</Text>
           <Text
             style={[
               styles.tagText,
-              activeTag === tag.label && styles.tagTextActive,
+              activeFilter === filter.id && styles.tagTextActive,
             ]}
           >
-            {tag.label.split(' ').slice(1).join(' ')}
+            {filter.label}
           </Text>
         </TouchableOpacity>
       ))}

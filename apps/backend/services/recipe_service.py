@@ -4,6 +4,7 @@ from uuid import uuid4
 from models.models import Recipe, Timer
 from repositories.recipe_repository import RecipeRepository
 from services.search_index import SearchIndex
+from core.taxonomy import DEFAULT_CATEGORY, normalize_category
 from utils.logger import logger
 
 
@@ -149,14 +150,30 @@ class RecipeService:
         self,
         source: Optional[str] = None,
         favorites_only: bool = False,
+        category: Optional[str] = None,
     ) -> List[Recipe]:
         recipes = self.repo.list()
-        
+
         if source:
             recipes = [r for r in recipes if r.source == source]
         if favorites_only:
             recipes = [r for r in recipes if r.is_favorite]
-        
-        logger.info("Listed %d recipes (source=%s, favorites_only=%s)", 
-                   len(recipes), source, favorites_only)
+        if category:
+            normalized = normalize_category(category)
+            if not normalized:
+                logger.warning("Unknown category filter: %s", category)
+                return []
+            recipes = [
+                r
+                for r in recipes
+                if normalize_category(
+                    r.category,
+                    default=DEFAULT_CATEGORY,
+                ) == normalized
+            ]
+
+        logger.info(
+            "Listed %d recipes (source=%s, favorites_only=%s, category=%s)",
+            len(recipes), source, favorites_only, category,
+        )
         return recipes

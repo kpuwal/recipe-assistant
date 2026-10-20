@@ -35,8 +35,8 @@ export const buildRecipeImageUrl = (source, image, width) => {
 const apiService = {
   getRecipes: (params) => api.get("/recipes", { params }),
   getFavorites: () => api.get("/recipes", { params: { favorites_only: true } }),
-  searchRecipes: (query) =>
-    api.get("/recipes/search", { params: { q: query } }),
+  searchRecipes: (params = {}) =>
+    api.get("/recipes/search", { params }),
   getRecipe: (id, lang) =>
     api.get(`/recipes/${id}`, { params: { lang } }),
   createRecipe: (data) => api.post("/recipes/", data),

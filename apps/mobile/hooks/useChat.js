@@ -11,7 +11,7 @@ const MAX_CHAT_ENTRIES = 2;
 export const useChat = (language = "nl") => {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
-  const [activeTag, setActiveTag] = useState(null);
+  const [activeFilter, setActiveFilter] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const chatListRef = useRef(null);
@@ -29,44 +29,31 @@ export const useChat = (language = "nl") => {
 
   const clearAll = useCallback(() => {
     setChat([]);
-    setActiveTag(null);
+    setActiveFilter(null);
   }, []);
 
   const scrollToTop = useCallback(() => {
     chatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, []);
 
-  const searchByTag = useCallback(async (tag) => {
-    setActiveTag(tag.label);
+  const applyFilter = useCallback(async (filter) => {
+    setActiveFilter(filter.id);
 
     try {
       setIsLoading(true);
-      let response;
+      const response = await apiService.searchRecipes(filter.params);
+      const recipes = response.data || [];
 
-      if (tag.query === "favorieten") {
-        response = await apiService.getFavorites();
-
-        appendMessage({
-          id: nextMessageId(),
-          user: `Snelzoeken: ${tag.label}`,
-          bot: `${response.data.length || 0} favoriete recepten gevonden.`,
-          recipes: response.data || [],
-        });
-      } else {
-        response = await apiService.searchRecipes(tag.query);
-        const recipeCount = response.data.length || 0;
-
-        appendMessage({
-          id: nextMessageId(),
-          user: `Snelzoeken: ${tag.label}`,
-          bot: recipeCount > 0
-            ? `${recipeCount} recepten gevonden.`
-            : "Geen recepten gevonden voor deze zoekopdracht.",
-          recipes: response.data || [],
-        });
-      }
+      appendMessage({
+        id: nextMessageId(),
+        user: `Filter: ${filter.label}`,
+        bot: recipes.length > 0
+          ? `${recipes.length} recepten gevonden.`
+          : "Geen recepten gevonden voor deze filter.",
+        recipes,
+      });
     } catch (error) {
-      console.error("Tag search error:", error);
+      console.error("Filter search error:", error);
       Alert.alert("Fout", "Kon niet zoeken. Probeer het opnieuw.");
     } finally {
       setIsLoading(false);
@@ -131,13 +118,13 @@ export const useChat = (language = "nl") => {
     message,
     setMessage,
     chat,
-    activeTag,
+    activeFilter,
     isLoading,
     chatListRef,
 
     // Actions
     clearAll,
-    searchByTag,
+    applyFilter,
     sendMessage,
     deleteRecipe,
     scrollToTop,

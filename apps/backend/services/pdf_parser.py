@@ -6,23 +6,26 @@ import re
 from unicodedata import normalize
 from services.search_index import build_search_index
 from core.helpers import slugify
+from core.taxonomy import (
+    CATEGORIES,
+    CATEGORY_ALIASES,
+    CATEGORY_LABELS,
+    DEFAULT_CATEGORY,
+    contains_term,
+    normalize_term,
+)
 
 from models.models import Recipe
 from services.image_extractor import ImageExtractor
 from utils.logger import logger
 
 
-CATEGORY_RULES = {
-    "wrap": ["wrap", "tortilla"],
-    "rice": ["rijst", "risotto", "paella"],
-    "noodle": ["noedel", "woknoedel", "udon", "ramen"],
-    "pasta": ["pasta", "penne", "spaghetti", "fusilli", "tagliatelle", "linguine", "lasagne"],
-    "salad": ["salade"],
-    "soup": ["soep"],
-    "curry": ["curry"],
-    "burger": ["burger"],
-    "pizza": ["pizza"]
-}
+TITLE_EXACT_SCORE = 3
+TITLE_PHRASE_BONUS = 2
+TITLE_COMPOUND_SCORE = 1
+INGREDIENT_SCORE = 1
+MAX_INGREDIENT_SCORE = 3
+MIN_COMPOUND_LENGTH = 4
 
 STOP_LINES = [
     "Wat vond je", "Bereidingswijze niet meer", "Meld je dan hier af",
@@ -70,14 +73,91 @@ def build_ingredients(lines):
         i += 1
     return ingredients
 
-def detect_category(title: str, ingredients):
-    text = (title + " " + " ".join(i["name"] for i in ingredients)).lower()
+def _category_terms(category: str) -> set[str]:
+    terms = (
+        *CATEGORY_ALIASES[category],
+        category,
+        CATEGORY_LABELS[category],
+    )
+    return {term for term in (normalize_term(value) for value in terms) if term}
 
-    for category, keywords in CATEGORY_RULES.items():
-        if any(k in text for k in keywords):
-            return category
 
-    return "other"
+def _title_match_score(term: str, title: str, title_tokens: list[str]) -> int:
+    if " " in term:
+        if contains_term(title, term):
+            return TITLE_EXACT_SCORE + TITLE_PHRASE_BONUS
+        return 0
+
+    if term in title_tokens:
+        return TITLE_EXACT_SCORE
+
+    if len(term) >= MIN_COMPOUND_LENGTH:
+        if f"{term}s" in title_tokens:
+            return TITLE_EXACT_SCORE
+        if any(token.endswith(term) for token in title_tokens):
+            return TITLE_COMPOUND_SCORE
+
+    return 0
+
+
+def _ingredient_matches(term: str, ingredient: str) -> bool:
+    if not ingredient:
+        return False
+
+    if " " in term:
+        return contains_term(ingredient, term)
+
+    tokens = ingredient.split()
+    if term in tokens:
+        return True
+
+    return len(term) >= MIN_COMPOUND_LENGTH and f"{term}s" in tokens
+
+
+def _ingredient_name(ingredient) -> str:
+    if isinstance(ingredient, dict):
+        return normalize_term(ingredient.get("name") or "")
+    return normalize_term(getattr(ingredient, "name", "") or "")
+
+
+def detect_category(title: str, ingredients) -> str:
+    title_text = normalize_term(title)
+    title_tokens = title_text.split()
+    ingredient_names = [
+        _ingredient_name(ingredient) for ingredient in (ingredients or [])
+    ]
+
+    candidates = []
+
+    for category in CATEGORIES:
+        if category == DEFAULT_CATEGORY:
+            continue
+
+        terms = _category_terms(category)
+        title_hits = 0
+        score = 0
+
+        for term in terms:
+            term_score = _title_match_score(term, title_text, title_tokens)
+            if term_score:
+                title_hits += 1
+                score += term_score
+
+        ingredient_hits = sum(
+            1
+            for name in ingredient_names
+            if any(_ingredient_matches(term, name) for term in terms)
+        )
+        score += min(ingredient_hits, MAX_INGREDIENT_SCORE) * INGREDIENT_SCORE
+
+        candidates.append((category, title_hits, score))
+
+    title_candidates = [candidate for candidate in candidates if candidate[1] > 0]
+    pool = title_candidates or candidates
+
+    category, _, score = max(pool, key=lambda candidate: (candidate[2], candidate[1]))
+
+    return category if score > 0 else DEFAULT_CATEGORY
 
 
 def parse_pdf_bytes(
