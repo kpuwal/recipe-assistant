@@ -108,6 +108,32 @@ def delete_timer(
     logger.info("Deleted timer %s from recipe %s", timer_id, recipe_id)
     return recipe
 
+@router.post("/{recipe_id}/cooked", response_model=Recipe)
+def mark_cooked(
+    recipe_id: str,
+    date: str = Query(..., description="Date cooked, YYYY-MM-DD"),
+    service: RecipeService = Depends(get_recipe_service)
+):
+    recipe = service.mark_cooked(recipe_id, date)
+    if not recipe:
+        logger.warning("Recipe not found for marking cooked: %s", recipe_id)
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    logger.info("Marked recipe %s as cooked on %s", recipe_id, date)
+    return recipe
+
+@router.delete("/{recipe_id}/cooked/{date}", response_model=Recipe)
+def unmark_cooked(
+    recipe_id: str,
+    date: str,
+    service: RecipeService = Depends(get_recipe_service)
+):
+    recipe = service.unmark_cooked(recipe_id, date)
+    if not recipe:
+        logger.warning("Recipe not found for unmarking cooked: %s", recipe_id)
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    logger.info("Unmarked recipe %s cooked on %s", recipe_id, date)
+    return recipe
+
 @router.get("/{recipe_id}/scale")
 def scale_recipe(
     recipe_id: str,

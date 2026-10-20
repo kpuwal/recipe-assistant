@@ -47,6 +47,10 @@ const apiService = {
     api.get(`/recipes/${id}/scale`, { params: { persons } }),
   addTimer: (id, data) => api.post(`/recipes/${id}/timers`, data),
   deleteTimer: (id, timerId) => api.delete(`/recipes/${id}/timers/${timerId}`),
+  markCooked: (id, date) =>
+    api.post(`/recipes/${id}/cooked`, null, { params: { date } }),
+  unmarkCooked: (id, date) => api.delete(`/recipes/${id}/cooked/${date}`),
+  getHistory: () => api.get("/history"),
   chat: (message, language) => api.post("/chat", { message, language }),
   syncRecipes: () => api.post("/ingestion/sync-recipes"),
   warmup: () => api.get("/warmup"),

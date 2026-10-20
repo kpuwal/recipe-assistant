@@ -26,6 +26,7 @@ import RecipeModal from "./modals/RecipeModal";
 import EditRecipeModal from "./modals/EditRecipeModal";
 import AddRecipeModal from "./modals/AddRecipeModal";
 import SyncResultModal from "./modals/SyncResultModal";
+import HistoryModal from "./modals/HistoryModal";
 
 import { useChat } from './hooks/useChat';
 import { API_URL, apiService } from './services/api';
@@ -69,6 +70,7 @@ export default function App() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
+  const [historyVisible, setHistoryVisible] = useState(false);
 
   const handleFavoriteChanged = useCallback((updatedRecipe) => {
     setSelectedRecipe(updatedRecipe);
@@ -93,7 +95,7 @@ export default function App() {
   }, []);
 
   const showRecipe = useCallback(async (recipe) => {
-    if (recipe.source === "ai") {
+    if (!recipe.id) {
       setSelectedRecipe(recipe);
       setModalVisible(true);
       return;
@@ -108,6 +110,19 @@ export default function App() {
     }
   }, []);
 
+  const openRecipeFromHistory = useCallback(
+    (entry) => {
+      setHistoryVisible(false);
+      showRecipe({
+        id: entry.recipe_id,
+        source: entry.source,
+        image: entry.image,
+        title: entry.title,
+      });
+    },
+    [showRecipe]
+  );
+
   if (!fontsLoaded && !fontError) {
     return null;
   }
@@ -118,7 +133,11 @@ export default function App() {
 
         <Header />
 
-        <ActionBar onClear={clearAll} onSync={syncRecipes} />
+        <ActionBar
+          onClear={clearAll}
+          onSync={syncRecipes}
+          onHistory={() => setHistoryVisible(true)}
+        />
 
         <TagFilters
           activeTag={activeTag}
@@ -163,6 +182,7 @@ export default function App() {
           setTimeout(() => setSelectedRecipe(null), 300);
         }}
         onFavoriteChanged={handleFavoriteChanged}
+        onCookedChanged={handleFavoriteChanged}
         onEditPress={(recipeToEdit) => {
           setModalVisible(false);
           setTimeout(() => {
@@ -196,6 +216,12 @@ export default function App() {
       <SyncResultModal
         result={syncResult}
         onClose={() => setSyncResult(null)}
+      />
+
+      <HistoryModal
+        visible={historyVisible}
+        onClose={() => setHistoryVisible(false)}
+        onSelectRecipe={openRecipeFromHistory}
       />
 
       {chatLoading && <LoadingOverlay />}

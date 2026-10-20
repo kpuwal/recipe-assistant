@@ -89,6 +89,51 @@ class RecipeService:
         logger.info("Deleted timer %s from recipe %s", timer_id, recipe_id)
         return saved
 
+    def mark_cooked(self, recipe_id: str, date: str) -> Optional[Recipe]:
+        recipe = self.repo.get(recipe_id)
+        if not recipe:
+            return None
+
+        recipe.cooked_dates = recipe.cooked_dates or []
+        if date not in recipe.cooked_dates:
+            recipe.cooked_dates.append(date)
+            saved = self.repo.save(recipe, clear_cache=False)
+            logger.info("Marked recipe %s as cooked on %s", recipe_id, date)
+            return saved
+
+        return recipe
+
+    def unmark_cooked(self, recipe_id: str, date: str) -> Optional[Recipe]:
+        recipe = self.repo.get(recipe_id)
+        if not recipe:
+            return None
+
+        recipe.cooked_dates = recipe.cooked_dates or []
+        if date in recipe.cooked_dates:
+            recipe.cooked_dates = [d for d in recipe.cooked_dates if d != date]
+            saved = self.repo.save(recipe, clear_cache=False)
+            logger.info("Unmarked recipe %s cooked on %s", recipe_id, date)
+            return saved
+
+        return recipe
+
+    def get_history(self) -> List[dict]:
+        entries = []
+        for recipe in self.list_recipes():
+            for date in recipe.cooked_dates or []:
+                entries.append({
+                    "recipe_id": recipe.id,
+                    "title": recipe.title,
+                    "image": recipe.image,
+                    "source": recipe.source,
+                    "date": date,
+                })
+
+        entries.sort(key=lambda e: e["title"])
+        entries.sort(key=lambda e: e["date"], reverse=True)
+        logger.info("Built cooking history with %d entries", len(entries))
+        return entries
+
     def delete_recipe(self, recipe_id: str) -> bool:
         success = self.repo.delete(recipe_id)
         if success:

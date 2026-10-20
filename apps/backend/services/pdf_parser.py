@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 
-import fitz
+import pymupdf as fitz
 import re
 from unicodedata import normalize
 from services.search_index import build_search_index

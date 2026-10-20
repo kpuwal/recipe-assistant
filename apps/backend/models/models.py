@@ -54,6 +54,8 @@ class Recipe(BaseModel):
 
     timers: List[Timer] = Field(default_factory=list)
 
+    cooked_dates: List[str] = Field(default_factory=list)
+
     image: Optional[str] = None
     image_bytes: Optional[bytes] = Field(default=None, exclude=True)
     image_extension: Optional[str] = Field(default=None, exclude=True)

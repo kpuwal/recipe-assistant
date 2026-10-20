@@ -23,6 +23,7 @@ from routers.recipes import router as recipes_router
 from routers.chat import router as chat_router
 from routers.ingestion import router as ingestion_router
 from routers.images import router as images_router
+from routers.history import router as history_router
 
 
 def _warm_recipe_cache() -> None:
@@ -93,6 +94,7 @@ app.include_router(recipes_router, dependencies=protected)
 app.include_router(chat_router, dependencies=protected)
 app.include_router(ingestion_router, dependencies=protected)
 app.include_router(images_router, dependencies=protected)
+app.include_router(history_router, dependencies=protected)
 
 
 if __name__ == "__main__":

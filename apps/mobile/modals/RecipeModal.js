@@ -15,8 +15,9 @@ import apiService, { buildRecipeImageUrl } from "../services/api";
 import { useTimers } from "../hooks/useTimers";
 import TimerOverlay from "../components/timers/TimerOverlay";
 import { TIMER_ICONS, TIMER_ICON_KEYS } from "../assets/icons";
+import { todayISO } from "../utils/dates";
 
-const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress, onRecipeSaved }) => {
+const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChanged, onEditPress, onRecipeSaved }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [displayRecipe, setDisplayRecipe] = useState(null);
   const [selectedPersons, setSelectedPersons] = useState(4);
@@ -30,11 +31,16 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
   const [timerIcon, setTimerIcon] = useState(null);
   const [savingTimer, setSavingTimer] = useState(false);
   const [pendingDeleteTimerId, setPendingDeleteTimerId] = useState(null);
+  const [markingCooked, setMarkingCooked] = useState(false);
 
   const { startTimer } = useTimers();
 
+  const today = todayISO();
+  const isCookedToday = (displayRecipe?.cooked_dates || []).includes(today);
+
   const scrollViewRef = useRef(null);
   const timerFormY = useRef(0);
+  const recipeIdRef = useRef(null);
 
   const scrollToTimerForm = useCallback(() => {
     requestAnimationFrame(() => {
@@ -46,13 +52,18 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
   }, []);
 
   useEffect(() => {
-    if (recipe) {
-      setIsFavorite(recipe.is_favorite ?? false);
+    if (!recipe) {
+      setDisplayRecipe(null);
+      recipeIdRef.current = null;
+      return;
+    }
+
+    setIsFavorite(recipe.is_favorite ?? false);
+
+    if (!recipe.id || recipeIdRef.current !== recipe.id) {
       setDisplayRecipe(recipe);
       setSelectedPersons(recipe.persons || 4);
-    } else {
-      // Reset when no recipe
-      setDisplayRecipe(null);
+      recipeIdRef.current = recipe.id ?? null;
     }
   }, [recipe]);
 
@@ -214,6 +225,28 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
     }
   };
 
+  const toggleCookedToday = async () => {
+    if (!displayRecipe?.id || markingCooked) return;
+
+    const alreadyCooked = (displayRecipe.cooked_dates || []).includes(today);
+    try {
+      setMarkingCooked(true);
+      const response = alreadyCooked
+        ? await apiService.unmarkCooked(displayRecipe.id, today)
+        : await apiService.markCooked(displayRecipe.id, today);
+      const updated = response.data;
+      setDisplayRecipe((prev) =>
+        prev ? { ...prev, cooked_dates: updated.cooked_dates } : updated
+      );
+      onCookedChanged?.(updated);
+    } catch (error) {
+      console.error("Toggle cooked error:", error);
+      Alert.alert("Fout", "Kon de kookstatus niet opslaan.");
+    } finally {
+      setMarkingCooked(false);
+    }
+  };
+
   if (!visible || !recipe) {
     return null;
   }
@@ -338,6 +371,27 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onEditPress,
                 <Ionicons name="pricetag-outline" size={20} color="#555" />
                 <Text style={styles.infoText}>{recipe.category}</Text>
               </View>
+            )}
+
+            {displayRecipe?.id && (
+              <TouchableOpacity
+                style={[
+                  styles.todayStamp,
+                  isCookedToday && styles.todayStampActive,
+                ]}
+                onPress={toggleCookedToday}
+                activeOpacity={0.8}
+                disabled={markingCooked}
+              >
+                <Text
+                  style={[
+                    styles.todayStampText,
+                    isCookedToday && styles.todayStampTextActive,
+                  ]}
+                >
+                  {isCookedToday ? "TODAY ✓" : "TODAY"}
+                </Text>
+              </TouchableOpacity>
             )}
           </View>
 
@@ -663,6 +717,32 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 16,
     color: "#333",
+  },
+
+  todayStamp: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 2,
+    borderColor: "#16a34a",
+    borderRadius: 8,
+    transform: [{ rotate: "-4deg" }],
+  },
+
+  todayStampActive: {
+    backgroundColor: "#16a34a",
+  },
+
+  todayStampText: {
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 2,
+    color: "#16a34a",
+  },
+
+  todayStampTextActive: {
+    color: "#fff",
   },
 
   sectionTitle: {
