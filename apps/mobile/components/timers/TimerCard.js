@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
 
   cardDone: {
-    backgroundColor: "#27ae60",
+    backgroundColor: "#16a34a",
   },
 
   main: {

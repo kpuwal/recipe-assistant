@@ -14,7 +14,7 @@ const SyncResultModal = ({ result, onClose }) => {
         </Text>
 
         <View style={styles.syncRow}>
-          <Ionicons name="checkmark-circle" size={26} color="#2ecc71" />
+          <Ionicons name="checkmark-circle" size={26} color="#16a34a" />
           <Text style={styles.syncLabel}>Verwerkt</Text>
           <Text style={styles.syncNumber}>{result.processed}</Text>
         </View>

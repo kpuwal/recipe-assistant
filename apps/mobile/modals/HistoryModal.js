@@ -6,10 +6,12 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
   StyleSheet,
 } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import apiService, { buildRecipeImageUrl } from "../services/api";
 import { formatCookedDate } from "../utils/dates";
@@ -18,6 +20,8 @@ const HistoryModal = ({ visible, onClose, onSelectRecipe }) => {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [removingKey, setRemovingKey] = useState(null);
+  const insets = useSafeAreaInsets();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -39,9 +43,47 @@ const HistoryModal = ({ visible, onClose, onSelectRecipe }) => {
     }
   }, [visible, load]);
 
+  const removeEntry = useCallback((item) => {
+    const key = `${item.date}-${item.recipe_id}`;
+
+    Alert.alert(
+      "Uit geschiedenis verwijderen",
+      `"${item.title}" van ${formatCookedDate(item.date)} verwijderen?`,
+      [
+        { text: "Annuleren", style: "cancel" },
+        {
+          text: "Verwijderen",
+          style: "destructive",
+          onPress: async () => {
+            setRemovingKey(key);
+            try {
+              await apiService.unmarkCooked(item.recipe_id, item.date);
+              setEntries((prev) =>
+                prev.filter(
+                  (entry) =>
+                    !(
+                      entry.recipe_id === item.recipe_id &&
+                      entry.date === item.date
+                    )
+                )
+              );
+            } catch (err) {
+              console.error("Remove history entry error:", err);
+              Alert.alert("Fout", "Kon deze vermelding niet verwijderen.");
+            } finally {
+              setRemovingKey(null);
+            }
+          },
+        },
+      ]
+    );
+  }, []);
+
   const renderItem = useCallback(
     ({ item }) => {
       const imageSource = buildRecipeImageUrl(item.source, item.image, 120);
+      const key = `${item.date}-${item.recipe_id}`;
+      const removing = removingKey === key;
 
       return (
         <TouchableOpacity
@@ -69,10 +111,27 @@ const HistoryModal = ({ visible, onClose, onSelectRecipe }) => {
               {item.title}
             </Text>
           </View>
+
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={(event) => {
+              event.stopPropagation();
+              removeEntry(item);
+            }}
+            disabled={removing}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            activeOpacity={0.7}
+          >
+            {removing ? (
+              <ActivityIndicator size="small" color="#be123c" />
+            ) : (
+              <Ionicons name="trash-outline" size={20} color="#be123c" />
+            )}
+          </TouchableOpacity>
         </TouchableOpacity>
       );
     },
-    [onSelectRecipe]
+    [onSelectRecipe, removeEntry, removingKey]
   );
 
   return (
@@ -83,7 +142,7 @@ const HistoryModal = ({ visible, onClose, onSelectRecipe }) => {
       onRequestClose={onClose}
     >
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={28} color="#333" />
           </TouchableOpacity>
@@ -125,12 +184,11 @@ const HistoryModal = ({ visible, onClose, onSelectRecipe }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#fafafa",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 50,
     paddingBottom: 15,
     paddingHorizontal: 20,
     backgroundColor: "#fff",
@@ -210,6 +268,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#1a1a1a",
+  },
+  deleteButton: {
+    padding: 8,
+    marginLeft: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

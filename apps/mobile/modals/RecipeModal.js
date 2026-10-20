@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons, Entypo, MaterialIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import apiService, { buildRecipeImageUrl } from "../services/api";
 import { useTimers } from "../hooks/useTimers";
 import TimerOverlay from "../components/timers/TimerOverlay";
@@ -34,6 +35,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
   const [markingCooked, setMarkingCooked] = useState(false);
 
   const { startTimer } = useTimers();
+  const insets = useSafeAreaInsets();
 
   const today = todayISO();
   const isCookedToday = (displayRecipe?.cooked_dates || []).includes(today);
@@ -260,7 +262,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
     >
       <View style={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={28} color="#333" />
           </TouchableOpacity>
@@ -289,7 +291,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
               <MaterialIcons 
                 name="save" 
                 size={26} 
-                color={saving ? "#999" : "#4CAF50"} 
+                color={saving ? "#999" : "#16a34a"} 
               />
             </TouchableOpacity>
           )}
@@ -612,12 +614,11 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#fafafa",
   },
 
   header: {
     backgroundColor: "#fff",
-    paddingTop: 50,
     paddingBottom: 15,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
@@ -707,7 +708,7 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#fafafa",
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
@@ -819,16 +820,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: "#fdecea",
+    backgroundColor: "#fee2e2",
     borderWidth: 1,
-    borderColor: "#f5c6c0",
+    borderColor: "#fca5a5",
   },
 
   timerChipLabel: {
     marginLeft: 6,
     fontSize: 14,
     fontWeight: "500",
-    color: "#c0392b",
+    color: "#be123c",
   },
 
   timerChipGroup: {
@@ -971,7 +972,7 @@ const styles = StyleSheet.create({
 
   iconOptionSelected: {
     borderColor: "#e74c3c",
-    backgroundColor: "#fdecea",
+    backgroundColor: "#fee2e2",
   },
 
   iconOptionImage: {

@@ -13,7 +13,7 @@ const config = {
         image: "./assets/splash.jpg",
         imageWidth: 320,
         resizeMode: "contain",
-        backgroundColor: "#FAFAFA"
+        backgroundColor: "#fafafa"
       }
     ],
     ["expo-font",

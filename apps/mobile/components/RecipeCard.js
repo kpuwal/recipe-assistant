@@ -44,7 +44,7 @@ const RecipeCard = memo(({ recipe, onPress, onDelete, API_URL }) => {
               style={styles.deleteButton} 
               onPress={handleDelete}
             >
-              <Ionicons name="trash-outline" size={22} color="#d9534f" />
+              <Ionicons name="trash-outline" size={22} color="#be123c" />
             </TouchableOpacity>
           )}
         </View>
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   placeholderImage: {
     width: 90,
     height: 90,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#fafafa",
     justifyContent: "center",
     alignItems: "center",
     borderRightWidth: 1,

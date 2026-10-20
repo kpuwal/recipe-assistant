@@ -14,6 +14,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { Ionicons } from "@expo/vector-icons";
 import apiService from "../services/api";
 import useRecipeForm from "../hooks/useRecipeForm";
+import CategoryChips from "../components/CategoryChips";
 
 const AddRecipeModal = ({ visible, onClose, onRecipeAdded }) => {
   const handleCreate = useCallback(async recipeData => {
@@ -87,12 +88,10 @@ const AddRecipeModal = ({ visible, onClose, onRecipeAdded }) => {
               />
             </View>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Category (e.g. pasta, curry...)"
-              returnKeyType="next"
+            <Text style={styles.sectionTitle}>Category</Text>
+            <CategoryChips
               value={form.category}
-              onChangeText={v => updateField("category", v)}
+              onChange={(value) => updateField("category", value)}
             />
 
             <Text style={styles.sectionTitle}>Ingredients</Text>

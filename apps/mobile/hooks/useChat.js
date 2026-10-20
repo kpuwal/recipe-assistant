@@ -6,6 +6,8 @@ import apiService from "../services/api";
 let messageIdCounter = 0;
 const nextMessageId = () => `msg-${Date.now()}-${messageIdCounter++}`;
 
+const MAX_CHAT_ENTRIES = 2;
+
 export const useChat = (language = "nl") => {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
@@ -13,6 +15,10 @@ export const useChat = (language = "nl") => {
   const [isLoading, setIsLoading] = useState(false);
 
   const chatListRef = useRef(null);
+
+  const appendMessage = useCallback((entry) => {
+    setChat((prev) => [entry, ...prev].slice(0, MAX_CHAT_ENTRIES));
+  }, []);
 
   useEffect(() => {
     if (chat.length === 0) return;
@@ -40,30 +46,24 @@ export const useChat = (language = "nl") => {
       if (tag.query === "favorieten") {
         response = await apiService.getFavorites();
 
-        setChat((prev) => [
-          {
-            id: nextMessageId(),
-            user: `Snelzoeken: ${tag.label}`,
-            bot: `${response.data.length || 0} favoriete recepten gevonden.`,
-            recipes: response.data || [],
-          },
-          ...prev,
-        ]);
+        appendMessage({
+          id: nextMessageId(),
+          user: `Snelzoeken: ${tag.label}`,
+          bot: `${response.data.length || 0} favoriete recepten gevonden.`,
+          recipes: response.data || [],
+        });
       } else {
         response = await apiService.searchRecipes(tag.query);
         const recipeCount = response.data.length || 0;
 
-        setChat((prev) => [
-          {
-            id: nextMessageId(),
-            user: `Snelzoeken: ${tag.label}`,
-            bot: recipeCount > 0
-              ? `${recipeCount} recepten gevonden.`
-              : "Geen recepten gevonden voor deze zoekopdracht.",
-            recipes: response.data || [],
-          },
-          ...prev,
-        ]);
+        appendMessage({
+          id: nextMessageId(),
+          user: `Snelzoeken: ${tag.label}`,
+          bot: recipeCount > 0
+            ? `${recipeCount} recepten gevonden.`
+            : "Geen recepten gevonden voor deze zoekopdracht.",
+          recipes: response.data || [],
+        });
       }
     } catch (error) {
       console.error("Tag search error:", error);
@@ -71,7 +71,7 @@ export const useChat = (language = "nl") => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [appendMessage]);
 
   const sendMessage = useCallback(async () => {
     if (!message.trim()) return;
@@ -81,15 +81,12 @@ export const useChat = (language = "nl") => {
       setIsLoading(true);
       const response = await apiService.chat(message, language);
 
-      setChat((prev) => [
-        {
-          id: nextMessageId(),
-          user: message,
-          bot: response.data.answer,
-          recipes: response.data.recipes || [],
-        },
-        ...prev,
-      ]);
+      appendMessage({
+        id: nextMessageId(),
+        user: message,
+        bot: response.data.answer,
+        recipes: response.data.recipes || [],
+      });
       setMessage("");
     } catch (error) {
       console.log(error);
@@ -100,7 +97,7 @@ export const useChat = (language = "nl") => {
     } finally {
       setIsLoading(false);
     }
-  }, [message, language]);
+  }, [message, language, appendMessage]);
 
   const deleteRecipe = useCallback(async (recipeId) => {
     Alert.alert(

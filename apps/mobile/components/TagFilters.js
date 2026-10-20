@@ -24,7 +24,12 @@ const TagFilters = ({ activeTag, onTagPress, onAddRecipe }) => {
           onPress={() => onTagPress(tag)}
         >
           <Text style={styles.tagEmoji}>{tag.label.split(' ')[0]}</Text>
-          <Text style={styles.tagText}>
+          <Text
+            style={[
+              styles.tagText,
+              activeTag === tag.label && styles.tagTextActive,
+            ]}
+          >
             {tag.label.split(' ').slice(1).join(' ')}
           </Text>
         </TouchableOpacity>
