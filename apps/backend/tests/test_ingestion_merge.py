@@ -62,6 +62,8 @@ def test_resync_preserves_user_data(monkeypatch):
         cooked_dates=["2026-10-01"],
         timers=[Timer(id="t1", label="Kook", duration_seconds=600)],
         created_at=datetime(2024, 1, 1),
+        oven_temperature=180,
+        oven_mode="fan",
     )
     parsed = Recipe(
         id="r043",
@@ -69,6 +71,8 @@ def test_resync_preserves_user_data(monkeypatch):
         category="other",
         is_favorite=False,
         created_at=None,
+        oven_temperature=220,
+        oven_mode="conventional",
     )
     monkeypatch.setattr(
         "pipeline.pdf_ingestion_pipeline.parse_pdf_bytes",
@@ -85,11 +89,40 @@ def test_resync_preserves_user_data(monkeypatch):
     assert result.timers[0].id == "t1"
     assert result.created_at == datetime(2024, 1, 1)
     assert result.category == "rice"
+    assert result.oven_temperature == 180
+    assert result.oven_mode == "fan"
     assert pipeline.repository.saved is parsed
 
 
+def test_resync_fills_missing_oven_settings(monkeypatch):
+    existing = Recipe(id="r043", title="Old title")
+    parsed = Recipe(
+        id="r043",
+        title="Foe yong hai",
+        oven_temperature=200,
+        oven_mode="conventional",
+    )
+    monkeypatch.setattr(
+        "pipeline.pdf_ingestion_pipeline.parse_pdf_bytes",
+        lambda pdf_bytes, recipe_id: parsed,
+    )
+
+    pipeline = _pipeline(existing)
+    result = pipeline._process_file(FakeFile(), 1)
+
+    assert result.oven_temperature == 200
+    assert result.oven_mode == "conventional"
+
+
 def test_new_recipe_keeps_parsed_values(monkeypatch):
-    parsed = Recipe(id="r999", title="New", category="soup", is_favorite=False)
+    parsed = Recipe(
+        id="r999",
+        title="New",
+        category="soup",
+        is_favorite=False,
+        oven_temperature=180,
+        oven_mode="fan",
+    )
     monkeypatch.setattr(
         "pipeline.pdf_ingestion_pipeline.parse_pdf_bytes",
         lambda pdf_bytes, recipe_id: parsed,
@@ -101,4 +134,6 @@ def test_new_recipe_keeps_parsed_values(monkeypatch):
     assert result.category == "soup"
     assert result.is_favorite is False
     assert result.cooked_dates == []
+    assert result.oven_temperature == 180
+    assert result.oven_mode == "fan"
     assert pipeline.repository.saved is parsed

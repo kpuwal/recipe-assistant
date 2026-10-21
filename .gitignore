@@ -13,6 +13,7 @@ apps/backend/keys
 apps/backend/debug
 apps/backend/README.txt
 apps/backend/category_backfill.json
+apps/backend/oven_backfill.json
 
 # Mobile
 apps/mobile/node_modules/

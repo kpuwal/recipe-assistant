@@ -21,6 +21,8 @@ BELANGRIJKE REGELS
 - title moet natuurlijk Nederlands zijn.
 - slug moet gebaseerd zijn op de titel.
 - persons is standaard 4 tenzij anders gevraagd.
+- oven_temperature is de oventemperatuur in °C (getal), of null als er geen oven nodig is.
+- oven_mode is "fan" (hetelucht), "conventional" (boven-onder) of null.
 - image is altijd null.
 
 Categorie moet één van de volgende zijn:
@@ -68,6 +70,8 @@ Gebruik EXACT dit JSON-formaat:
     "category": "noodle",
     "persons": 4,
     "time_minutes": 25,
+    "oven_temperature": null,
+    "oven_mode": null,
     "ingredients": [
         {{
         "name": "kipfilet",

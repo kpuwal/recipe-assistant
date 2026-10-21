@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import apiService from "../services/api";
 import useRecipeForm from "../hooks/useRecipeForm";
 import CategoryChips from "../components/CategoryChips";
+import OvenSettingInput from "../components/OvenSettingInput";
 
 const AddRecipeModal = ({ visible, onClose, onRecipeAdded }) => {
   const handleCreate = useCallback(async recipeData => {
@@ -87,6 +88,13 @@ const AddRecipeModal = ({ visible, onClose, onRecipeAdded }) => {
                 onChangeText={v => updateField("time_minutes", v)}
               />
             </View>
+
+            <OvenSettingInput
+              temperature={form.oven_temperature}
+              mode={form.oven_mode}
+              onTemperatureChange={v => updateField("oven_temperature", v)}
+              onModeChange={v => updateField("oven_mode", v)}
+            />
 
             <Text style={styles.sectionTitle}>Category</Text>
             <CategoryChips

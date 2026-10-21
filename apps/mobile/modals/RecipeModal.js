@@ -15,7 +15,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import apiService, { buildRecipeImageUrl } from "../services/api";
 import { useTimers } from "../hooks/useTimers";
 import TimerOverlay from "../components/timers/TimerOverlay";
-import { TIMER_ICONS, TIMER_ICON_KEYS } from "../assets/icons";
+import {
+  TIMER_ICONS,
+  TIMER_ICON_KEYS,
+  getOvenModeIcon,
+} from "../assets/icons";
 import { todayISO } from "../utils/dates";
 
 const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChanged, onEditPress, onRecipeSaved }) => {
@@ -79,6 +83,8 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
         source: "personal",
         persons: displayRecipe.persons || selectedPersons,
         time_minutes: displayRecipe.time_minutes,
+        oven_temperature: displayRecipe.oven_temperature ?? null,
+        oven_mode: displayRecipe.oven_mode ?? null,
         category: displayRecipe.category || "other",
         ingredients: displayRecipe.ingredients || [],
         steps: displayRecipe.steps || [],
@@ -364,6 +370,18 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
                 <Ionicons name="time-outline" size={20} color="#555" />
                 <Text style={styles.infoText}>
                   {recipe.time_minutes} minuten
+                </Text>
+              </View>
+            )}
+
+            {recipe.oven_temperature != null && (
+              <View style={styles.infoRow}>
+                <Image
+                  source={getOvenModeIcon(recipe.oven_mode)}
+                  style={styles.ovenIcon}
+                />
+                <Text style={styles.infoText}>
+                  {recipe.oven_temperature} °C
                 </Text>
               </View>
             )}
@@ -718,6 +736,11 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 16,
     color: "#333",
+  },
+
+  ovenIcon: {
+    width: 20,
+    height: 20,
   },
 
   todayStamp: {

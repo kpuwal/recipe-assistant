@@ -12,6 +12,13 @@ PRESERVED_ON_RESYNC = (
     "category",
 )
 
+# Only fill these from the PDF when the existing recipe has no value, so
+# manual edits are not overwritten on re-sync.
+FILL_IF_EMPTY_ON_RESYNC = (
+    "oven_temperature",
+    "oven_mode",
+)
+
 
 class PDFIngestionPipeline:
 
@@ -23,6 +30,11 @@ class PDFIngestionPipeline:
     def _merge_existing(self, parsed, existing):
         for field in PRESERVED_ON_RESYNC:
             setattr(parsed, field, getattr(existing, field))
+
+        for field in FILL_IF_EMPTY_ON_RESYNC:
+            existing_value = getattr(existing, field)
+            if existing_value is not None:
+                setattr(parsed, field, existing_value)
 
         logger.info(
             "Preserved user data on resync for %s (favorite=%s, cooked=%d, timers=%d, category=%s)",

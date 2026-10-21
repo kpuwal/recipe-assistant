@@ -5,6 +5,8 @@ const INITIAL_FORM = {
   title: "",
   persons: "",
   time_minutes: "",
+  oven_temperature: "",
+  oven_mode: null,
   category: "other",
   ingredients: [{ name: "", quantity: "" }],
   steps: [""],
@@ -24,6 +26,10 @@ const useRecipeForm = ({ onSubmit, onSuccess, initialValues = null }) => {
         time_minutes: initialValues.time_minutes
           ? String(initialValues.time_minutes)
           : "",
+        oven_temperature: initialValues.oven_temperature
+          ? String(initialValues.oven_temperature)
+          : "",
+        oven_mode: initialValues.oven_mode || null,
         category: initialValues.category || "other",
         ingredients: initialValues.ingredients?.length
           ? initialValues.ingredients
@@ -103,6 +109,10 @@ const useRecipeForm = ({ onSubmit, onSuccess, initialValues = null }) => {
       source: "personal",
       persons: form.persons ? parseInt(form.persons) : null,
       time_minutes: form.time_minutes ? parseInt(form.time_minutes) : null,
+      oven_temperature: form.oven_temperature
+        ? parseInt(form.oven_temperature)
+        : null,
+      oven_mode: form.oven_mode || null,
       category: form.category.trim() || "other",
       ingredients: validIngredients,
       steps: validSteps,

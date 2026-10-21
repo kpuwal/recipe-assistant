@@ -45,6 +45,8 @@ class Recipe(BaseModel):
 
     persons: Optional[int] = None
     time_minutes: Optional[int] = None
+    oven_temperature: Optional[int] = None
+    oven_mode: Optional[str] = None
 
     ingredients: List[Ingredient] = Field(default_factory=list)
     pantry_ingredients: List[Ingredient] = Field(default_factory=list)
@@ -81,6 +83,8 @@ class RecipeCreate(BaseModel):
 
     persons: Optional[int] = Field(None, description="Number of servings")
     time_minutes: Optional[int] = Field(None, description="Preparation time")
+    oven_temperature: Optional[int] = Field(None, description="Oven temperature in °C")
+    oven_mode: Optional[str] = Field(None, description="fan or conventional")
 
     ingredients: List[Ingredient] = Field(default_factory=list)
     pantry_ingredients: List[Ingredient] = Field(default_factory=list)
@@ -99,6 +103,8 @@ class RecipeUpdate(BaseModel):
 
     persons: Optional[int] = None
     time_minutes: Optional[int] = None
+    oven_temperature: Optional[int] = None
+    oven_mode: Optional[str] = None
 
     ingredients: Optional[List[Ingredient]] = None
     pantry_ingredients: Optional[List[Ingredient]] = None

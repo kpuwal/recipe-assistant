@@ -1,4 +1,4 @@
-// Timer icon registry.
+// Timer and oven icon registry.
 // Metro requires static require() calls, so add one line per new PNG here.
 export const TIMER_ICONS = {
   bacon: require("./bacon.png"),
@@ -30,5 +30,20 @@ export const TIMER_ICONS = {
 export const TIMER_ICON_KEYS = Object.keys(TIMER_ICONS);
 
 export const getTimerIcon = (key) => (key ? TIMER_ICONS[key] : null);
+
+export const OVEN_MODE_ICONS = {
+  default: require("./toaster-oven.png"),
+  fan: require("./hetelucht.png"),
+  conventional: require("./boven-onder.png"),
+};
+
+export const OVEN_MODES = [
+  { value: null, label: "Oven" },
+  { value: "fan", label: "Hetelucht" },
+  { value: "conventional", label: "Boven-onder" },
+];
+
+export const getOvenModeIcon = (mode) =>
+  OVEN_MODE_ICONS[mode] || OVEN_MODE_ICONS.default;
 
 export default TIMER_ICONS;

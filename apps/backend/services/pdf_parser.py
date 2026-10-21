@@ -17,6 +17,7 @@ from core.taxonomy import (
 
 from models.models import Recipe
 from services.image_extractor import ImageExtractor
+from services.oven import extract_oven_settings
 from utils.logger import logger
 
 
@@ -236,6 +237,7 @@ def parse_pdf_bytes(
         title = recipe_id
 
     category = detect_category(title, ingredients)
+    oven_temperature, oven_mode = extract_oven_settings(raw_text)
 
     recipe = Recipe(
         id=recipe_id,
@@ -244,6 +246,8 @@ def parse_pdf_bytes(
         category=category,
         persons=persons,
         time_minutes=time_minutes,
+        oven_temperature=oven_temperature,
+        oven_mode=oven_mode,
         ingredients=ingredients,
         steps=steps,
         tips="\n".join(tips),
