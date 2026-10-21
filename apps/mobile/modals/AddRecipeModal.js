@@ -8,6 +8,7 @@ import {
   Modal,
   Keyboard,
   TouchableWithoutFeedback,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -16,15 +17,32 @@ import apiService from "../services/api";
 import useRecipeForm from "../hooks/useRecipeForm";
 import CategoryChips from "../components/CategoryChips";
 import OvenSettingInput from "../components/OvenSettingInput";
+import RecipeImageField from "../components/RecipeImageField";
 
 const AddRecipeModal = ({ visible, onClose, onRecipeAdded }) => {
-  const handleCreate = useCallback(async recipeData => {
-    return apiService.createRecipe(recipeData);
+  const handleCreate = useCallback(async (recipeData, { imageAsset }) => {
+    const response = await apiService.createRecipe(recipeData);
+
+    if (!imageAsset) {
+      return response;
+    }
+
+    try {
+      return await apiService.uploadRecipeImage(response.data.id, imageAsset);
+    } catch (error) {
+      console.error("Upload recipe image error:", error);
+      Alert.alert(
+        "Foto mislukt",
+        "Het recept is opgeslagen, maar de foto niet. Je kunt de foto later toevoegen via Bewerken."
+      );
+      return response;
+    }
   }, []);
 
   const {
     form,
     submitting,
+    imageAsset,
     handleSubmit,
     updateField,
     updateIngredient,
@@ -32,6 +50,8 @@ const AddRecipeModal = ({ visible, onClose, onRecipeAdded }) => {
     removeIngredient,
     addStep,
     removeStep,
+    selectImage,
+    removeImage,
   } = useRecipeForm({
     onSubmit: handleCreate,
     onSuccess: onRecipeAdded,
@@ -102,6 +122,13 @@ const AddRecipeModal = ({ visible, onClose, onRecipeAdded }) => {
               onChange={(value) => updateField("category", value)}
             />
 
+            <Text style={styles.sectionTitle}>Foto</Text>
+            <RecipeImageField
+              imageAsset={imageAsset}
+              onChange={selectImage}
+              onRemove={removeImage}
+            />
+
             <Text style={styles.sectionTitle}>Ingredients</Text>
             {form.ingredients.map((ing, index) => (
               <View key={index} style={styles.ingredientRow}>
@@ -166,15 +193,6 @@ const AddRecipeModal = ({ visible, onClose, onRecipeAdded }) => {
               textAlignVertical="top"
               value={form.tips}
               onChangeText={v => updateField("tips", v)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Image URL (optional)"
-              autoCapitalize="none"
-              keyboardType="url"
-              returnKeyType="done"
-              value={form.image}
-              onChangeText={v => updateField("image", v)}
             />
 
             <View style={styles.buttonRow}>

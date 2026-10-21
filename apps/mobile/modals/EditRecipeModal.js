@@ -12,16 +12,31 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Ionicons } from "@expo/vector-icons";
-import apiService from "../services/api";
+import apiService, { buildRecipeImageUrl } from "../services/api";
 import useRecipeForm from "../hooks/useRecipeForm";
 import CategoryChips from "../components/CategoryChips";
 import OvenSettingInput from "../components/OvenSettingInput";
+import RecipeImageField from "../components/RecipeImageField";
 
 const EditRecipeModal = ({ visible, recipe, onClose, onRecipeUpdated }) => {
   const handleUpdate = useCallback(
-    async recipeData => {
+    async (recipeData, { imageAsset, imageRemoved }) => {
       if (!recipe?.id) return;
-      return apiService.updateRecipe(recipe.id, { ...recipeData, id: recipe.id });
+
+      if (imageRemoved) {
+        await apiService.deleteRecipeImage(recipe.id);
+      }
+
+      const response = await apiService.updateRecipe(recipe.id, {
+        ...recipeData,
+        id: recipe.id,
+      });
+
+      if (imageAsset) {
+        return apiService.uploadRecipeImage(recipe.id, imageAsset);
+      }
+
+      return response;
     },
     [recipe?.id]
   );
@@ -34,12 +49,29 @@ const EditRecipeModal = ({ visible, recipe, onClose, onRecipeUpdated }) => {
     [onClose, onRecipeUpdated]
   );
 
-  const { form, submitting, handleSubmit, updateField, updateIngredient, addIngredient, removeIngredient, addStep, removeStep } =
-    useRecipeForm({
-      initialValues: recipe,
-      onSubmit: handleUpdate,
-      onSuccess: handleSuccess,
-    });
+  const {
+    form,
+    submitting,
+    imageAsset,
+    imageRemoved,
+    handleSubmit,
+    updateField,
+    updateIngredient,
+    addIngredient,
+    removeIngredient,
+    addStep,
+    removeStep,
+    selectImage,
+    removeImage,
+  } = useRecipeForm({
+    initialValues: recipe,
+    onSubmit: handleUpdate,
+    onSuccess: handleSuccess,
+  });
+
+  const existingImage = imageRemoved
+    ? null
+    : buildRecipeImageUrl(recipe?.source, recipe?.image);
 
   return (
     <Modal
@@ -103,6 +135,14 @@ const EditRecipeModal = ({ visible, recipe, onClose, onRecipeUpdated }) => {
               onChange={(value) => updateField("category", value)}
             />
 
+            <Text style={styles.sectionTitle}>Foto</Text>
+            <RecipeImageField
+              imageAsset={imageAsset}
+              existingImage={existingImage}
+              onChange={selectImage}
+              onRemove={removeImage}
+            />
+
             <Text style={styles.sectionTitle}>Ingredients</Text>
             {form.ingredients.map((ing, index) => (
               <View key={index} style={styles.ingredientRow}>
@@ -158,14 +198,6 @@ const EditRecipeModal = ({ visible, recipe, onClose, onRecipeUpdated }) => {
               textAlignVertical="top"
               value={form.tips}
               onChangeText={v => updateField("tips", v)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Image URL (optional)"
-              autoCapitalize="none"
-              keyboardType="url"
-              value={form.image}
-              onChangeText={v => updateField("image", v)}
             />
 
             <View style={styles.buttonRow}>

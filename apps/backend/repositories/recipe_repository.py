@@ -195,6 +195,11 @@ class RecipeRepository:
         self._clear_cache()
         return self.save(recipe)
 
+    def delete_image(self, source: str, filename: str) -> bool:
+        if not filename:
+            return False
+        return self.storage.delete_file(f"images/{source}/{filename}")
+
     def delete(self, recipe_id: str) -> bool:
         with self._lock:
             recipe = self.get(recipe_id)

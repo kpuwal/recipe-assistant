@@ -23,6 +23,14 @@ const config = {
           "node_modules/@expo-google-fonts/playfair-display/700Bold/PlayfairDisplay_700Bold.ttf"
         ]
       }
+    ],
+    [
+      "expo-image-picker",
+      {
+        photosPermission: "Geef toegang tot je foto's om een receptfoto te kiezen.",
+        cameraPermission: "Geef toegang tot je camera om een receptfoto te maken.",
+        microphonePermission: false
+      }
     ]
   ],
 

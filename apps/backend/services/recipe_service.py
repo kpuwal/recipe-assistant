@@ -30,6 +30,45 @@ class RecipeService:
         logger.info("Created new personal recipe: %s", recipe.title)
         return saved
 
+    def set_recipe_image(
+        self,
+        recipe_id: str,
+        data: bytes,
+        extension: str,
+    ) -> Optional[Recipe]:
+        recipe = self.get_recipe(recipe_id)
+        if not recipe:
+            return None
+
+        old_image = recipe.image
+        recipe.image = f"{recipe.id}-{uuid4().hex[:8]}.{extension}"
+        recipe.image_bytes = data
+        recipe.image_extension = extension
+
+        updated = self.update_recipe(recipe)
+        if updated and old_image and old_image != updated.image:
+            self.repo.delete_image(updated.source, old_image)
+
+        logger.info("Updated image for recipe %s", recipe_id)
+        return updated
+
+    def remove_recipe_image(self, recipe_id: str) -> Optional[Recipe]:
+        recipe = self.get_recipe(recipe_id)
+        if not recipe:
+            return None
+
+        old_image = recipe.image
+        if not old_image:
+            return recipe
+
+        recipe.image = None
+        updated = self.update_recipe(recipe)
+        if updated:
+            self.repo.delete_image(updated.source, old_image)
+
+        logger.info("Removed image for recipe %s", recipe_id)
+        return updated
+
     def save_ai_recipe(self, recipe_data: dict) -> Recipe:
         recipe = Recipe(**recipe_data)
         recipe.source = "ai"

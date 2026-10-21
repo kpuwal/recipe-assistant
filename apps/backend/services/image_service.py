@@ -16,12 +16,36 @@ MAX_WIDTH = 1600
 INGEST_MAX_DIMENSION = 1200
 INGEST_JPEG_QUALITY = 82
 
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+
 MEDIA_TYPES = {
     "png": "image/png",
     "jpg": "image/jpeg",
     "jpeg": "image/jpeg",
     "webp": "image/webp",
 }
+
+UPLOAD_EXTENSIONS = {
+    "JPEG": "jpg",
+    "PNG": "png",
+    "WEBP": "webp",
+}
+
+
+def validate_image_upload(data: bytes) -> Optional[str]:
+    """Return a safe extension for an uploaded image, or None if invalid."""
+    if not data or len(data) > MAX_UPLOAD_BYTES:
+        return None
+
+    try:
+        image = Image.open(io.BytesIO(data))
+        image_format = image.format
+        image.verify()
+    except Exception as e:
+        logger.warning("Rejected image upload: %s", e)
+        return None
+
+    return UPLOAD_EXTENSIONS.get(image_format)
 
 
 def media_type_for(filename: str) -> str:

@@ -42,6 +42,17 @@ const apiService = {
   createRecipe: (data) => api.post("/recipes/", data),
   updateRecipe: (id, data) => api.put(`/recipes/${id}`, data),
   deleteRecipe: (id) => api.delete(`/recipes/${id}`),
+  uploadRecipeImage: (id, asset) => {
+    const form = new FormData();
+    form.append("file", {
+      uri: asset.uri,
+      name: asset.fileName || `recipe-${id}.jpg`,
+      type: asset.mimeType || "image/jpeg",
+    });
+
+    return api.post(`/recipes/${id}/image`, form, { timeout: 30000 });
+  },
+  deleteRecipeImage: (id) => api.delete(`/recipes/${id}/image`),
   toggleFavorite: (id) => api.put(`/recipes/${id}/favorite`),
   scaleRecipe: (id, persons) =>
     api.get(`/recipes/${id}/scale`, { params: { persons } }),

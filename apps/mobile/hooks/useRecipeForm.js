@@ -17,8 +17,13 @@ const INITIAL_FORM = {
 const useRecipeForm = ({ onSubmit, onSuccess, initialValues = null }) => {
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
+  const [imageAsset, setImageAsset] = useState(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
 
   useEffect(() => {
+    setImageAsset(null);
+    setImageRemoved(false);
+
     if (initialValues) {
       setForm({
         title: initialValues.title || "",
@@ -45,6 +50,16 @@ const useRecipeForm = ({ onSubmit, onSuccess, initialValues = null }) => {
 
   const updateField = useCallback((field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  const selectImage = useCallback(asset => {
+    setImageAsset(asset);
+    setImageRemoved(false);
+  }, []);
+
+  const removeImage = useCallback(() => {
+    setImageAsset(null);
+    setImageRemoved(true);
   }, []);
 
   const updateIngredient = useCallback((index, field, value) => {
@@ -117,25 +132,32 @@ const useRecipeForm = ({ onSubmit, onSuccess, initialValues = null }) => {
       ingredients: validIngredients,
       steps: validSteps,
       tips: form.tips.trim() || null,
-      image: form.image.trim() || null,
+      image: imageRemoved ? null : form.image.trim() || null,
     };
 
     setSubmitting(true);
     try {
-      const response = await onSubmit(recipeData);
+      const response = await onSubmit(recipeData, {
+        imageAsset,
+        imageRemoved,
+      });
       onSuccess?.(response.data);
       setForm(INITIAL_FORM);
+      setImageAsset(null);
+      setImageRemoved(false);
     } catch (error) {
       console.error(error);
       Alert.alert("Fout", "Kon recept niet opslaan. Probeer het opnieuw.");
     } finally {
       setSubmitting(false);
     }
-  }, [form, onSubmit, onSuccess]);
+  }, [form, imageAsset, imageRemoved, onSubmit, onSuccess]);
 
   return {
     form,
     submitting,
+    imageAsset,
+    imageRemoved,
     handleSubmit,
     updateField,
     updateIngredient,
@@ -143,6 +165,8 @@ const useRecipeForm = ({ onSubmit, onSuccess, initialValues = null }) => {
     removeIngredient,
     addStep,
     removeStep,
+    selectImage,
+    removeImage,
   };
 };
 

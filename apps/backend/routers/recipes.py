@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, File, UploadFile
 from typing import Optional
 
 from services.recipe_service import RecipeService
 from services.search_service import SearchService
+from services.image_service import MAX_UPLOAD_BYTES, validate_image_upload
 from core.dependencies import get_recipe_service, get_search_service
 from services.recipe_scaler import recipe_scaler
 from models.models import (
@@ -64,6 +65,44 @@ def get_recipe(
         logger.warning("Recipe not found: %s", recipe_id)
         raise HTTPException(status_code=404, detail="Recipe not found")
     return recipe
+
+@router.post("/{recipe_id}/image", response_model=Recipe)
+async def upload_recipe_image(
+    recipe_id: str,
+    file: UploadFile = File(...),
+    service: RecipeService = Depends(get_recipe_service)
+):
+    data = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="Image is larger than 10 MB")
+
+    extension = validate_image_upload(data)
+    if not extension:
+        raise HTTPException(
+            status_code=415,
+            detail="Invalid image. Use JPEG, PNG or WebP.",
+        )
+
+    recipe = service.set_recipe_image(recipe_id, data, extension)
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    logger.info("Uploaded image for recipe %s", recipe_id)
+    return recipe
+
+
+@router.delete("/{recipe_id}/image", response_model=Recipe)
+def delete_recipe_image(
+    recipe_id: str,
+    service: RecipeService = Depends(get_recipe_service)
+):
+    recipe = service.remove_recipe_image(recipe_id)
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    logger.info("Removed image for recipe %s", recipe_id)
+    return recipe
+
 
 @router.post("/", response_model=Recipe)
 def create_recipe(
