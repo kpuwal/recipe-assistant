@@ -84,7 +84,7 @@ export const TimersProvider = ({ children }) => {
     return () => subscription.remove();
   }, []);
 
-  const startTimer = useCallback(({ sourceId = null, label, durationSeconds, icon = null }) => {
+  const startTimer = useCallback(({ sourceId = null, label, durationSeconds, icon = null, color = null }) => {
     const exists =
       sourceId && timersRef.current.some((t) => t.sourceId === sourceId);
     if (exists) return false;
@@ -96,6 +96,7 @@ export const TimersProvider = ({ children }) => {
       label,
       durationSeconds,
       icon,
+      color,
       status: "running",
       endsAt: start + durationSeconds * 1000,
       remainingMs: durationSeconds * 1000,

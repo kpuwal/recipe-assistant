@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { formatTime } from "../../utils/formatTime";
 import { getRemainingMs } from "../../hooks/useTimers";
 import { getTimerIcon } from "../../assets/icons";
+import { DEFAULT_TIMER_COLOR } from "../../constants/timerColors";
 
 const TimerCard = ({ timer, now, onToggle, onStop }) => {
   const isDone = timer.status === "done";
@@ -23,6 +24,7 @@ const TimerCard = ({ timer, now, onToggle, onStop }) => {
     <View
       style={[
         styles.card,
+        { backgroundColor: timer.color || DEFAULT_TIMER_COLOR },
         isPaused && styles.cardPaused,
         isDone && styles.cardDone,
       ]}

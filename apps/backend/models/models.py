@@ -15,6 +15,7 @@ class Timer(BaseModel):
     duration_seconds: int
     step_index: Optional[int] = None
     icon: Optional[str] = None
+    color: Optional[str] = None
 
 
 class TimerCreate(BaseModel):
@@ -22,6 +23,7 @@ class TimerCreate(BaseModel):
     duration_seconds: int
     step_index: int
     icon: Optional[str] = None
+    color: Optional[str] = None
 
 
 class ChatRequest(BaseModel):

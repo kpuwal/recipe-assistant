@@ -20,6 +20,11 @@ import {
   TIMER_ICON_KEYS,
   getOvenModeIcon,
 } from "../assets/icons";
+import {
+  TIMER_COLORS,
+  DEFAULT_TIMER_COLOR,
+  getTimerColor,
+} from "../constants/timerColors";
 import { todayISO } from "../utils/dates";
 
 const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChanged, onEditPress, onRecipeSaved }) => {
@@ -34,6 +39,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
   const [timerLabel, setTimerLabel] = useState("");
   const [timerMinutes, setTimerMinutes] = useState("5");
   const [timerIcon, setTimerIcon] = useState(null);
+  const [timerColor, setTimerColor] = useState(DEFAULT_TIMER_COLOR);
   const [savingTimer, setSavingTimer] = useState(false);
   const [pendingDeleteTimerId, setPendingDeleteTimerId] = useState(null);
   const [markingCooked, setMarkingCooked] = useState(false);
@@ -161,6 +167,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
     setTimerLabel("");
     setTimerMinutes("5");
     setTimerIcon(null);
+    setTimerColor(DEFAULT_TIMER_COLOR);
     setShowTimerForm(true);
   };
 
@@ -196,6 +203,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
         duration_seconds: minutes * 60,
         step_index: timerStepIndex,
         icon: timerIcon,
+        color: timerColor,
       });
       setDisplayRecipe(response.data);
       setShowTimerForm(false);
@@ -213,6 +221,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
       label: timer.label,
       durationSeconds: timer.duration_seconds,
       icon: timer.icon,
+      color: timer.color,
     });
     if (!started) {
       Alert.alert("Timer", "Deze timer loopt al.");
@@ -375,12 +384,12 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
             )}
 
             {recipe.oven_temperature != null && (
-              <View style={styles.infoRow}>
+              <View style={[styles.infoRow, styles.ovenInfoRow]}>
                 <Image
                   source={getOvenModeIcon(recipe.oven_mode)}
                   style={styles.ovenIcon}
                 />
-                <Text style={styles.infoText}>
+                <Text style={[styles.infoText, styles.ovenInfoText]}>
                   {recipe.oven_temperature} °C
                 </Text>
               </View>
@@ -441,10 +450,19 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
 
                   {stepTimers.length > 0 && (
                     <View style={styles.stepTimersRow}>
-                      {stepTimers.map((timer) => (
+                      {stepTimers.map((timer) => {
+                        const timerColor = getTimerColor(timer.color);
+
+                        return (
                         <View key={timer.id} style={styles.timerChipGroup}>
                           <TouchableOpacity
-                            style={styles.timerChip}
+                            style={[
+                              styles.timerChip,
+                              {
+                                backgroundColor: timerColor.background,
+                                borderColor: timerColor.border,
+                              },
+                            ]}
                             activeOpacity={0.8}
                             onLongPress={() =>
                               setPendingDeleteTimerId(timer.id)
@@ -460,9 +478,14 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
                             <Ionicons
                               name="timer-outline"
                               size={16}
-                              color="#e74c3c"
+                              color={timerColor.text}
                             />
-                            <Text style={styles.timerChipLabel}>
+                            <Text
+                              style={[
+                                styles.timerChipLabel,
+                                { color: timerColor.text },
+                              ]}
+                            >
                               {timer.label}
                             </Text>
                           </TouchableOpacity>
@@ -487,7 +510,8 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
                             </TouchableOpacity>
                           )}
                         </View>
-                      ))}
+                        );
+                      })}
                     </View>
                   )}
                 </View>
@@ -582,6 +606,30 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
                   </TouchableOpacity>
                 ))}
               </ScrollView>
+
+              <Text style={styles.timerFormLabel}>Kleur</Text>
+              <View style={styles.colorPicker}>
+                {TIMER_COLORS.map((option) => {
+                  const selected = timerColor === option.value;
+
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.colorOption,
+                        { backgroundColor: option.value },
+                        selected && styles.colorOptionSelected,
+                      ]}
+                      onPress={() => setTimerColor(option.value)}
+                      accessibilityLabel={option.label}
+                    >
+                      {selected && (
+                        <Ionicons name="checkmark" size={18} color="#fff" />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
               <View style={styles.timerFormButtons}>
                 <TouchableOpacity
@@ -739,8 +787,22 @@ const styles = StyleSheet.create({
   },
 
   ovenIcon: {
-    width: 20,
-    height: 20,
+    width: 16,
+    height: 16,
+  },
+
+  ovenInfoRow: {
+    backgroundColor: "#fdecea",
+    borderWidth: 1,
+    borderColor: "#f5c6c2",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+  },
+
+  ovenInfoText: {
+    fontSize: 14,
+    marginLeft: 6,
   },
 
   todayStamp: {
@@ -1001,6 +1063,25 @@ const styles = StyleSheet.create({
   iconOptionImage: {
     width: 24,
     height: 24,
+  },
+
+  colorPicker: {
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  colorOption: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+
+  colorOptionSelected: {
+    borderColor: "#282c34",
   },
 
   timerFormButtons: {
