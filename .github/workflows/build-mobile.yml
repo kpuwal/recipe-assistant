@@ -12,18 +12,17 @@ jobs:
         working-directory: apps/mobile
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
-
-      - uses: expo/expo-github-action@v8
-        with:
-          expo-version: latest
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
 
       - run: npm ci
 
-      - run: eas build --platform android --profile preview --non-interactive
+      - name: Build with EAS
+        run: npx --yes eas-cli@latest build --platform android --profile preview --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
