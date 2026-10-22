@@ -1,3 +1,10 @@
+if (process.env.EAS_BUILD && !process.env.EXPO_PUBLIC_APP_API_KEY) {
+  throw new Error(
+    "EXPO_PUBLIC_APP_API_KEY is not set for this EAS build. " +
+      "Add it to the EAS environment referenced by eas.json."
+  );
+}
+
 const config = {
   name: "RecipeAssistantApp",
   slug: "RecipeAssistantApp",

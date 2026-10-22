@@ -116,7 +116,7 @@ class SearchService:
             )
         )
 
-        logger.info("Search for '%s' returned %d results", raw_query, len(results))
+        logger.info("Search returned %d results", len(results))
         return [recipe for recipe, _ in results]
 
     def _parse_query(self, query: str) -> tuple[List[str], bool]:

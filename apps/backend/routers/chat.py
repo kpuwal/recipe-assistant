@@ -4,11 +4,24 @@ from intent import detect_intent
 from services.groq_service import groq_service
 from services.search_service import SearchService
 from core.dependencies import get_search_service
+from core.rate_limit import rate_limit
+from core.settings import settings
 from utils.logger import logger
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
-@router.post("")
+@router.post(
+    "",
+    dependencies=[
+        Depends(
+            rate_limit(
+                "chat",
+                settings.chat_rate_limit,
+                settings.chat_rate_window,
+            )
+        )
+    ],
+)
 def chat(
     request: ChatRequest,
     search_service: SearchService = Depends(get_search_service)

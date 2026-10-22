@@ -52,7 +52,7 @@ def search_recipes(
         category=category,
         favorites_only=favorites_only,
     )
-    logger.info("Search for '%s' returned %d recipes", query, len(recipes))
+    logger.info("Search returned %d recipes", len(recipes))
     return recipes
 
 @router.get("/{recipe_id}", response_model=Recipe)

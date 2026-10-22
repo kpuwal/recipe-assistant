@@ -43,6 +43,7 @@ def test_set_recipe_image_replaces_old_image():
     assert updated.image.startswith("r001-")
     assert updated.image.endswith(".png")
     assert updated.image_bytes is None
+    assert updated.user_edited_fields == ["image"]
     assert repository.deleted == [("personal", "r001-old.jpg")]
 
 
@@ -60,6 +61,7 @@ def test_remove_recipe_image_deletes_blob():
     updated = service.remove_recipe_image("r001")
 
     assert updated.image is None
+    assert updated.user_edited_fields == ["image"]
     assert repository.deleted == [("personal", "r001-old.jpg")]
 
 

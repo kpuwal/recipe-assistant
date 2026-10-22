@@ -42,7 +42,7 @@ class GroqService:
         )
         
         try:
-            logger.info("Generating AI recipes for query: %s", user_message[:100])
+            logger.info("Generating %d AI recipes", recipe_count)
 
             completion = self.client.chat.completions.create(
                 model="llama-3.3-70b-versatile",

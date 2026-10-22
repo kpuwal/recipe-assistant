@@ -26,5 +26,10 @@ class Settings:
         # misconfigured deploy fails loudly instead of serving publicly.
         self.api_key = os.getenv("APP_API_KEY", "").strip()
 
+        self.chat_rate_limit = int(os.getenv("CHAT_RATE_LIMIT", "30"))
+        self.chat_rate_window = int(os.getenv("CHAT_RATE_WINDOW_SECONDS", "60"))
+        self.sync_rate_limit = int(os.getenv("SYNC_RATE_LIMIT", "3"))
+        self.sync_rate_window = int(os.getenv("SYNC_RATE_WINDOW_SECONDS", "300"))
+
 
 settings = Settings()

@@ -4,7 +4,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { formatTime } from "../../utils/formatTime";
 import { getRemainingMs } from "../../hooks/useTimers";
 import { getTimerIcon } from "../../assets/icons";
-import { DEFAULT_TIMER_COLOR } from "../../constants/timerColors";
+import {
+  DEFAULT_TIMER_COLOR,
+  PAUSED_TIMER_COLOR,
+} from "../../constants/timerColors";
 
 const TimerCard = ({ timer, now, onToggle, onStop }) => {
   const isDone = timer.status === "done";
@@ -82,7 +85,7 @@ const styles = StyleSheet.create({
   },
 
   cardPaused: {
-    backgroundColor: "#f39c12",
+    backgroundColor: PAUSED_TIMER_COLOR,
   },
 
   cardDone: {

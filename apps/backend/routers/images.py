@@ -12,7 +12,7 @@ router = APIRouter(prefix="/images", tags=["images"])
 
 ALLOWED_SOURCES = {"imported", "ai", "personal"}
 
-CACHE_CONTROL = "public, max-age=86400"
+CACHE_CONTROL = "private, max-age=86400"
 
 
 def _image_response(content: bytes, media_type: str, request: Request) -> Response:

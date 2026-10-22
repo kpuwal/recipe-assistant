@@ -27,6 +27,8 @@ import {
 } from "../constants/timerColors";
 import { todayISO } from "../utils/dates";
 
+const TIMER_CHIP_COLOR = getTimerColor(DEFAULT_TIMER_COLOR);
+
 const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChanged, onEditPress, onRecipeSaved }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [displayRecipe, setDisplayRecipe] = useState(null);
@@ -451,16 +453,14 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
                   {stepTimers.length > 0 && (
                     <View style={styles.stepTimersRow}>
                       {stepTimers.map((timer) => {
-                        const timerColor = getTimerColor(timer.color);
-
                         return (
                         <View key={timer.id} style={styles.timerChipGroup}>
                           <TouchableOpacity
                             style={[
                               styles.timerChip,
                               {
-                                backgroundColor: timerColor.background,
-                                borderColor: timerColor.border,
+                                backgroundColor: TIMER_CHIP_COLOR.background,
+                                borderColor: TIMER_CHIP_COLOR.border,
                               },
                             ]}
                             activeOpacity={0.8}
@@ -478,12 +478,12 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
                             <Ionicons
                               name="timer-outline"
                               size={16}
-                              color={timerColor.text}
+                              color={TIMER_CHIP_COLOR.text}
                             />
                             <Text
                               style={[
                                 styles.timerChipLabel,
-                                { color: timerColor.text },
+                                { color: TIMER_CHIP_COLOR.text },
                               ]}
                             >
                               {timer.label}
@@ -787,22 +787,22 @@ const styles = StyleSheet.create({
   },
 
   ovenIcon: {
-    width: 16,
-    height: 16,
+    width: 18,
+    height: 18,
+    tintColor: "#e74c3c",
   },
 
   ovenInfoRow: {
-    backgroundColor: "#fdecea",
-    borderWidth: 1,
-    borderColor: "#f5c6c2",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
+    backgroundColor: "transparent",
+    paddingHorizontal: 0,
+    paddingVertical: 4,
   },
 
   ovenInfoText: {
-    fontSize: 14,
+    fontSize: 16,
     marginLeft: 6,
+    color: "#e74c3c",
+    fontWeight: "700",
   },
 
   todayStamp: {

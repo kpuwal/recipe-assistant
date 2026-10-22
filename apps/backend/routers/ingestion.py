@@ -4,6 +4,7 @@ from functools import lru_cache
 from pipeline.pdf_ingestion_pipeline import PDFIngestionPipeline
 from core.settings import settings
 from core.dependencies import get_recipe_repository
+from core.rate_limit import rate_limit
 from utils.logger import logger
 
 router = APIRouter(prefix="/ingestion", tags=["ingestion"])
@@ -31,7 +32,18 @@ def get_pipeline(
         state=state
     )
 
-@router.post("/sync-recipes")
+@router.post(
+    "/sync-recipes",
+    dependencies=[
+        Depends(
+            rate_limit(
+                "sync",
+                settings.sync_rate_limit,
+                settings.sync_rate_window,
+            )
+        )
+    ],
+)
 def sync_recipes(
     dry_run: bool = False,
     pipeline: PDFIngestionPipeline = Depends(get_pipeline)

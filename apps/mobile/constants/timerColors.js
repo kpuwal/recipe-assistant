@@ -38,6 +38,8 @@ export const TIMER_COLORS = [
 
 export const DEFAULT_TIMER_COLOR = TIMER_COLORS[0].value;
 
+export const PAUSED_TIMER_COLOR = "#6b7280";
+
 export const getTimerColor = (value) =>
   TIMER_COLORS.find((color) => color.value === value) || TIMER_COLORS[0];
 

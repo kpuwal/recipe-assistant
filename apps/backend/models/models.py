@@ -4,6 +4,21 @@ from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
+MANUAL_EDITABLE_FIELDS = (
+    "title",
+    "persons",
+    "time_minutes",
+    "oven_temperature",
+    "oven_mode",
+    "ingredients",
+    "pantry_ingredients",
+    "steps",
+    "tips",
+    "image",
+    "category",
+)
+
+
 class Ingredient(BaseModel):
     quantity: Optional[str] = None
     name: str
@@ -27,7 +42,7 @@ class TimerCreate(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(..., min_length=1, max_length=2000)
     session_id: str = "default"
     language: str = "nl"
 
@@ -65,6 +80,8 @@ class Recipe(BaseModel):
     image_extension: Optional[str] = Field(default=None, exclude=True)
 
     category: str = "other"
+
+    user_edited_fields: List[str] = Field(default_factory=list)
 
     search_text: Optional[str] = Field(default=None, exclude=True)
     tokens: List[str] = Field(default_factory=list, exclude=True)

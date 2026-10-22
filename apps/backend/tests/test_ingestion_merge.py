@@ -94,6 +94,81 @@ def test_resync_preserves_user_data(monkeypatch):
     assert pipeline.repository.saved is parsed
 
 
+def test_resync_preserves_manually_edited_fields(monkeypatch):
+    existing = Recipe(
+        id="r043",
+        title="Mijn eigen titel",
+        steps=["Mijn eigen stap"],
+        tips="Mijn eigen tip",
+        user_edited_fields=["title", "steps", "tips"],
+    )
+    parsed = Recipe(
+        id="r043",
+        title="Foe yong hai",
+        steps=["Nieuwe stap uit PDF"],
+        tips="Nieuwe tip uit PDF",
+    )
+    monkeypatch.setattr(
+        "pipeline.pdf_ingestion_pipeline.parse_pdf_bytes",
+        lambda pdf_bytes, recipe_id: parsed,
+    )
+
+    pipeline = _pipeline(existing)
+    result = pipeline._process_file(FakeFile(), 1)
+
+    assert result.title == "Mijn eigen titel"
+    assert result.steps == ["Mijn eigen stap"]
+    assert result.tips == "Mijn eigen tip"
+    assert set(result.user_edited_fields) == {"steps", "tips", "title"}
+
+
+def test_resync_preserves_existing_image(monkeypatch):
+    existing = Recipe(
+        id="r043",
+        title="Old title",
+        image="r043-abc123.jpg",
+    )
+    parsed = Recipe(
+        id="r043",
+        title="Foe yong hai",
+        image="r043.jpg",
+        image_bytes=b"new image from pdf",
+        image_extension="jpg",
+    )
+    monkeypatch.setattr(
+        "pipeline.pdf_ingestion_pipeline.parse_pdf_bytes",
+        lambda pdf_bytes, recipe_id: parsed,
+    )
+
+    pipeline = _pipeline(existing)
+    result = pipeline._process_file(FakeFile(), 1)
+
+    assert result.image == "r043-abc123.jpg"
+    assert result.image_bytes is None
+    assert result.image_extension is None
+
+
+def test_resync_keeps_pdf_image_when_recipe_has_none(monkeypatch):
+    existing = Recipe(id="r043", title="Old title")
+    parsed = Recipe(
+        id="r043",
+        title="Foe yong hai",
+        image="r043.jpg",
+        image_bytes=b"new image from pdf",
+        image_extension="jpg",
+    )
+    monkeypatch.setattr(
+        "pipeline.pdf_ingestion_pipeline.parse_pdf_bytes",
+        lambda pdf_bytes, recipe_id: parsed,
+    )
+
+    pipeline = _pipeline(existing)
+    result = pipeline._process_file(FakeFile(), 1)
+
+    assert result.image == "r043.jpg"
+    assert result.image_bytes == b"new image from pdf"
+
+
 def test_resync_fills_missing_oven_settings(monkeypatch):
     existing = Recipe(id="r043", title="Old title")
     parsed = Recipe(

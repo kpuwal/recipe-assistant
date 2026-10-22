@@ -1,7 +1,7 @@
 from typing import List, Optional
 from uuid import uuid4
 
-from models.models import Recipe, Timer
+from models.models import MANUAL_EDITABLE_FIELDS, Recipe, Timer
 from repositories.recipe_repository import RecipeRepository
 from services.search_index import SearchIndex
 from core.taxonomy import DEFAULT_CATEGORY, normalize_category
@@ -21,12 +21,25 @@ class RecipeService:
             return False
         return True
 
+    @staticmethod
+    def _mark_edited(recipe: Recipe, *fields: str) -> None:
+        recipe.user_edited_fields = sorted(
+            set(recipe.user_edited_fields or []) | set(fields)
+        )
+
+    def _record_manual_edits(self, recipe: Recipe, existing: Recipe) -> None:
+        changed = [
+            field
+            for field in MANUAL_EDITABLE_FIELDS
+            if getattr(existing, field) != getattr(recipe, field)
+        ]
+        if changed:
+            self._mark_edited(recipe, *changed)
+
     def create_recipe(self, recipe_data: dict) -> Recipe:
         recipe = Recipe(**recipe_data)
-        print("recipe before save, from form ", recipe)
         recipe.source = "personal"
         saved = self.repo.save(recipe)
-        print("recipe in service ", saved)
         logger.info("Created new personal recipe: %s", recipe.title)
         return saved
 
@@ -44,6 +57,7 @@ class RecipeService:
         recipe.image = f"{recipe.id}-{uuid4().hex[:8]}.{extension}"
         recipe.image_bytes = data
         recipe.image_extension = extension
+        self._mark_edited(recipe, "image")
 
         updated = self.update_recipe(recipe)
         if updated and old_image and old_image != updated.image:
@@ -62,6 +76,7 @@ class RecipeService:
             return recipe
 
         recipe.image = None
+        self._mark_edited(recipe, "image")
         updated = self.update_recipe(recipe)
         if updated:
             self.repo.delete_image(updated.source, old_image)
@@ -89,6 +104,7 @@ class RecipeService:
             logger.warning("Recipe not found for update: %s", recipe.id)
             return None
 
+        self._record_manual_edits(recipe, existing)
         updated = self.repo.update(recipe)
         logger.info("Updated recipe: %s", recipe.title)
         return updated

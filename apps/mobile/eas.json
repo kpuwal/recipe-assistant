@@ -1,0 +1,17 @@
+{
+  "cli": {
+    "version": ">= 3.0.0"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://recipe-api-366325712933.europe-west4.run.app"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    }
+  }
+}

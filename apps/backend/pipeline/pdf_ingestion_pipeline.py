@@ -1,6 +1,7 @@
-from pathlib import Path
+from copy import deepcopy
 
 from utils.logger import logger
+from models.models import MANUAL_EDITABLE_FIELDS
 from services.pdf_parser import parse_pdf_bytes
 
 
@@ -10,6 +11,7 @@ PRESERVED_ON_RESYNC = (
     "timers",
     "created_at",
     "category",
+    "user_edited_fields",
 )
 
 # Only fill these from the PDF when the existing recipe has no value, so
@@ -29,20 +31,30 @@ class PDFIngestionPipeline:
 
     def _merge_existing(self, parsed, existing):
         for field in PRESERVED_ON_RESYNC:
-            setattr(parsed, field, getattr(existing, field))
+            setattr(parsed, field, deepcopy(getattr(existing, field)))
+
+        for field in existing.user_edited_fields or []:
+            if field in MANUAL_EDITABLE_FIELDS:
+                setattr(parsed, field, deepcopy(getattr(existing, field)))
 
         for field in FILL_IF_EMPTY_ON_RESYNC:
             existing_value = getattr(existing, field)
             if existing_value is not None:
                 setattr(parsed, field, existing_value)
 
+        if existing.image:
+            parsed.image = existing.image
+            parsed.image_bytes = None
+            parsed.image_extension = None
+
         logger.info(
-            "Preserved user data on resync for %s (favorite=%s, cooked=%d, timers=%d, category=%s)",
+            "Preserved user data on resync for %s (favorite=%s, cooked=%d, timers=%d, category=%s, edited=%s)",
             parsed.id,
             parsed.is_favorite,
             len(parsed.cooked_dates or []),
             len(parsed.timers or []),
             parsed.category,
+            parsed.user_edited_fields,
         )
         return parsed
 
