@@ -8,8 +8,10 @@ import React, {
   useMemo,
 } from "react";
 import { AppState } from "react-native";
+import { setAudioModeAsync, useAudioPlayer } from "expo-audio";
 
 const TICK_MS = 250;
+const TIMER_ALARM_SOUND = require("../assets/sounds/timer-done.wav");
 
 const TimersContext = createContext(null);
 
@@ -29,6 +31,30 @@ export const TimersProvider = ({ children }) => {
 
   const intervalRef = useRef(null);
   const timersRef = useRef([]);
+  const doneTimerIdsRef = useRef(new Set());
+  const alarmPlayer = useAudioPlayer(TIMER_ALARM_SOUND);
+
+  useEffect(() => {
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: false,
+      interruptionMode: "doNotMix",
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const doneIds = new Set(
+      timers.filter((timer) => timer.status === "done").map((timer) => timer.id)
+    );
+    const hasNewDone = [...doneIds].some(
+      (id) => !doneTimerIdsRef.current.has(id)
+    );
+    doneTimerIdsRef.current = doneIds;
+
+    if (!hasNewDone) return;
+
+    alarmPlayer.seekTo(0).then(() => alarmPlayer.play()).catch(() => {});
+  }, [timers, alarmPlayer]);
 
   useEffect(() => {
     timersRef.current = timers;

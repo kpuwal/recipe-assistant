@@ -40,7 +40,21 @@ const config = {
       }
     ],
     "expo-image",
-    "expo-status-bar"
+    "expo-status-bar",
+    [
+      "expo-navigation-bar",
+      {
+        style: "dark"
+      }
+    ],
+    [
+      "expo-audio",
+      {
+        microphonePermission: false,
+        recordAudioAndroid: false,
+        enableBackgroundPlayback: false
+      }
+    ]
   ],
 
   ios: {

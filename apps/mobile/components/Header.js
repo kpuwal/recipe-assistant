@@ -42,9 +42,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logoImage: {
-    width: 108,
-    height: 126,
-    marginRight: 14,
+    width: 93,
+    height: 138,
+    marginRight: 4,
     borderRadius: 10,
   },
   logoTextContainer: {

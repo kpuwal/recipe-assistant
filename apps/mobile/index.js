@@ -1,11 +1,13 @@
 import { registerRootComponent } from 'expo';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NavigationBar } from 'expo-navigation-bar';
 
 import App from './App';
 import { TimersProvider } from './hooks/useTimers';
 
 const Root = () => (
   <SafeAreaProvider>
+    <NavigationBar style="dark" />
     <TimersProvider>
       <App />
     </TimersProvider>
