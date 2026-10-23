@@ -38,7 +38,9 @@ const config = {
         cameraPermission: "Geef toegang tot je camera om een receptfoto te maken.",
         microphonePermission: false
       }
-    ]
+    ],
+    "expo-image",
+    "expo-status-bar"
   ],
 
   ios: {

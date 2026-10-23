@@ -14,7 +14,12 @@ const Header = () => {
         <View style={styles.logoTextContainer} pointerEvents="none">
           <Text style={styles.logoText}>Chill Chinchilla</Text>
           <Text style={styles.cookbookText}>Cookbook</Text>
-          <Text style={styles.subtitle}>
+          <Text
+            style={styles.subtitle}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
+          >
             Zoek op ingrediënten, categorie of kooktijd
           </Text>
         </View>
@@ -37,9 +42,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logoImage: {
-    width: 88,
-    height: 102,
-    marginRight: 12,
+    width: 108,
+    height: 126,
+    marginRight: 14,
     borderRadius: 10,
   },
   logoTextContainer: {
@@ -65,9 +70,9 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: "PlayfairRegular",
-    fontSize: 14,
+    fontSize: 12,
     color: "#999",
-    lineHeight: 16,
+    lineHeight: 14,
     includeFontPadding: false,
   },
 });

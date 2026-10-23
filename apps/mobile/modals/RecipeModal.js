@@ -289,14 +289,12 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
           </Text>
 
            {/* Edit Button */}
-          {/* {recipe.source === "personal" && ( */}
             <TouchableOpacity 
               onPress={handleEdit}
               style={styles.headerButton}
             >
               <Entypo name="edit" size={24} color="#1e90ff" />
             </TouchableOpacity>
-          {/* )} */}
 
           {/* Save Button - Only for AI Recipes */}
           {recipe.source === "ai" && (
@@ -349,80 +347,88 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
 
           {/* Meta Info */}
           <View style={styles.metaContainer}>
-            <View style={styles.scaleContainer}>
-              <Ionicons name="people-outline" size={20} color="#555" />
-              <Text style={styles.scaleTitle}>Personen</Text>
-              
-              <View style={styles.scaleButtons}>
-                {[2, 4].map((p) => (
+            <View style={styles.metaRow}>
+              <View style={styles.scaleContainer}>
+                <Ionicons name="people-outline" size={20} color="#555" />
+                <Text style={styles.scaleTitle}>Personen</Text>
+
+                <View style={styles.scaleButtons}>
+                  {[2, 4].map((p) => (
+                    <TouchableOpacity
+                      key={p}
+                      onPress={() => scaleRecipe(p)}
+                      style={[
+                        styles.personButton,
+                        selectedPersons === p && styles.personButtonSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.personText,
+                          selectedPersons === p && styles.personTextSelected,
+                        ]}
+                      >
+                        {p}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {recipe.time_minutes && (
+                <View style={styles.infoRow}>
+                  <Ionicons name="time-outline" size={20} color="#555" />
+                  <Text style={styles.infoText}>
+                    {recipe.time_minutes} minuten
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {((recipe.category && recipe.category !== "other") ||
+              recipe.oven_temperature != null ||
+              displayRecipe?.id) && (
+              <View style={styles.metaRow}>
+                {recipe.oven_temperature != null && (
+                  <View style={[styles.infoRow, styles.ovenInfoRow]}>
+                    <Image
+                      source={getOvenModeIcon(recipe.oven_mode)}
+                      style={styles.ovenIcon}
+                    />
+                    <Text style={[styles.infoText, styles.ovenInfoText]}>
+                      {recipe.oven_temperature} °C
+                    </Text>
+                  </View>
+                )}
+
+                {recipe.category && recipe.category !== "other" && (
+                  <View style={[styles.infoRow, styles.tagInfoRow]}>
+                    <Ionicons name="pricetag-outline" size={20} color="#555" />
+                    <Text style={styles.infoText}>{recipe.category}</Text>
+                  </View>
+                )}
+
+                {displayRecipe?.id && (
                   <TouchableOpacity
-                    key={p}
-                    onPress={() => scaleRecipe(p)}
                     style={[
-                      styles.personButton,
-                      selectedPersons === p && styles.personButtonSelected,
+                      styles.todayStamp,
+                      isCookedToday && styles.todayStampActive,
                     ]}
+                    onPress={toggleCookedToday}
+                    activeOpacity={0.8}
+                    disabled={markingCooked}
                   >
                     <Text
                       style={[
-                        styles.personText,
-                        selectedPersons === p && styles.personTextSelected,
+                        styles.todayStampText,
+                        isCookedToday && styles.todayStampTextActive,
                       ]}
                     >
-                      {p}
+                      {isCookedToday ? "TODAY ✓" : "TODAY"}
                     </Text>
                   </TouchableOpacity>
-                ))}
+                )}
               </View>
-            </View>
-
-            {recipe.time_minutes && (
-              <View style={styles.infoRow}>
-                <Ionicons name="time-outline" size={20} color="#555" />
-                <Text style={styles.infoText}>
-                  {recipe.time_minutes} minuten
-                </Text>
-              </View>
-            )}
-
-            {recipe.oven_temperature != null && (
-              <View style={[styles.infoRow, styles.ovenInfoRow]}>
-                <Image
-                  source={getOvenModeIcon(recipe.oven_mode)}
-                  style={styles.ovenIcon}
-                />
-                <Text style={[styles.infoText, styles.ovenInfoText]}>
-                  {recipe.oven_temperature} °C
-                </Text>
-              </View>
-            )}
-
-            {recipe.category && recipe.category !== "other" && (
-              <View style={styles.infoRow}>
-                <Ionicons name="pricetag-outline" size={20} color="#555" />
-                <Text style={styles.infoText}>{recipe.category}</Text>
-              </View>
-            )}
-
-            {displayRecipe?.id && (
-              <TouchableOpacity
-                style={[
-                  styles.todayStamp,
-                  isCookedToday && styles.todayStampActive,
-                ]}
-                onPress={toggleCookedToday}
-                activeOpacity={0.8}
-                disabled={markingCooked}
-              >
-                <Text
-                  style={[
-                    styles.todayStampText,
-                    isCookedToday && styles.todayStampTextActive,
-                  ]}
-                >
-                  {isCookedToday ? "TODAY ✓" : "TODAY"}
-                </Text>
-              </TouchableOpacity>
             )}
           </View>
 
@@ -719,8 +725,6 @@ const styles = StyleSheet.create({
   },
 
   metaContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
     padding: 20,
     gap: 12,
     backgroundColor: "#fff",
@@ -728,9 +732,14 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
 
+  metaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 12,
+  },
+
   scaleContainer: {
-    backgroundColor: "#fff",
-    padding: 20,
     alignItems: "center",
     flexDirection: "row",
   },
@@ -786,6 +795,12 @@ const styles = StyleSheet.create({
     color: "#333",
   },
 
+  tagInfoRow: {
+    backgroundColor: "transparent",
+    paddingHorizontal: 0,
+    paddingVertical: 4,
+  },
+
   ovenIcon: {
     width: 18,
     height: 18,
@@ -808,6 +823,7 @@ const styles = StyleSheet.create({
   todayStamp: {
     flexDirection: "row",
     alignItems: "center",
+    marginLeft: 12,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 2,
