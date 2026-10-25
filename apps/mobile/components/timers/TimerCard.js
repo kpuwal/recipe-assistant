@@ -6,6 +6,7 @@ import { getRemainingMs } from "../../hooks/useTimers";
 import { getTimerIcon } from "../../assets/icons";
 import {
   DEFAULT_TIMER_COLOR,
+  DONE_TIMER_COLOR,
   PAUSED_TIMER_COLOR,
 } from "../../constants/timerColors";
 
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
   },
 
   cardDone: {
-    backgroundColor: "#16a34a",
+    backgroundColor: DONE_TIMER_COLOR,
   },
 
   main: {

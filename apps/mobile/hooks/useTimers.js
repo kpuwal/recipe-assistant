@@ -11,7 +11,7 @@ import { AppState } from "react-native";
 import { setAudioModeAsync, useAudioPlayer } from "expo-audio";
 
 const TICK_MS = 250;
-const TIMER_ALARM_SOUND = require("../assets/sounds/timer-done.wav");
+const TIMER_ALARM_SOUND = require("../assets/sounds/timer-done.mp3");
 
 const TimersContext = createContext(null);
 
@@ -162,9 +162,18 @@ export const TimersProvider = ({ children }) => {
     setNow(Date.now());
   }, []);
 
+  const silenceAlarm = useCallback(() => {
+    alarmPlayer.pause();
+    alarmPlayer.seekTo(0).catch(() => {});
+  }, [alarmPlayer]);
+
   const stop = useCallback((id) => {
-    setTimers((prev) => prev.filter((timer) => timer.id !== id));
-  }, []);
+    const timer = timersRef.current.find((item) => item.id === id);
+    if (timer?.status === "done") {
+      silenceAlarm();
+    }
+    setTimers((prev) => prev.filter((item) => item.id !== id));
+  }, [silenceAlarm]);
 
   const value = useMemo(
     () => ({ timers, now, startTimer, toggle, stop }),
