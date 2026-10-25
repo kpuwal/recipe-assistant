@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   actionButtonsRow: {
     flexDirection: "column",
     position: "absolute",
-    top: 8,
+    bottom: 8,
     right: 8,
     zIndex: 10,
   },

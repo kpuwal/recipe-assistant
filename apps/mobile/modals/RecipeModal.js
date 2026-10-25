@@ -329,6 +329,7 @@ const RecipeModal = ({ visible, recipe, onClose, onFavoriteChanged, onCookedChan
         <ScrollView
           ref={scrollViewRef}
           style={styles.scrollContainer}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets={true}
