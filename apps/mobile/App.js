@@ -5,6 +5,7 @@ import {
   Alert,
   StyleSheet,
   View,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
@@ -32,10 +33,13 @@ import { useChat } from './hooks/useChat';
 import { API_URL, apiService } from './services/api';
 import TimerOverlay from './components/timers/TimerOverlay';
 
+SplashScreen.setOptions({ duration: 250, fade: true });
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function App() {
   const [showError, setShowError] = useState(false);
+  const [splashImageLoaded, setSplashImageLoaded] = useState(false);
+  const [warmupDone, setWarmupDone] = useState(false);
 
   const [fontsLoaded, fontError] = useFonts({
     PlayfairBold: PlayfairDisplay_700Bold,
@@ -43,13 +47,28 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync().catch(() => {});
-    }
-  }, [fontsLoaded, fontError]);
+    if (!splashImageLoaded) return;
+    SplashScreen.hideAsync().catch(() => {});
+  }, [splashImageLoaded]);
 
   useEffect(() => {
-    apiService.warmup().catch(() => {});
+    let active = true;
+    const timeout = setTimeout(() => {
+      if (active) setWarmupDone(true);
+    }, 8000);
+
+    apiService.warmup()
+      .catch(() => {})
+      .finally(() => {
+        if (!active) return;
+        clearTimeout(timeout);
+        setWarmupDone(true);
+      });
+
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+    };
   }, []);
 
   const {
@@ -123,8 +142,21 @@ export default function App() {
     [showRecipe]
   );
 
-  if (!fontsLoaded && !fontError) {
-    return null;
+  const fontsReady = fontsLoaded || !!fontError;
+  const appReady = fontsReady && warmupDone && splashImageLoaded;
+
+  if (!appReady) {
+    return (
+      <View style={styles.bootSplash}>
+        <Image
+          source={require("./assets/splash-screen-fullscreen.png")}
+          style={styles.bootSplashImage}
+          resizeMode="cover"
+          onLoad={() => setSplashImageLoaded(true)}
+          onError={() => setSplashImageLoaded(true)}
+        />
+      </View>
+    );
   }
 
   return (
@@ -232,6 +264,17 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  bootSplash: {
+    flex: 1,
+    backgroundColor: "#fbf1d9",
+  },
+
+  bootSplashImage: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+
   safeArea: {
     flex: 1,
     backgroundColor: "#fafafa",
